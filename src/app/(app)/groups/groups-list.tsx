@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -20,14 +21,13 @@ function GroupCard({
   group: Group
   onDelete: (id: string) => void
 }) {
-  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="group relative p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
-        <button
-          onClick={() => router.push(`/groups/${group.id}`)}
+        <Link
+          href={`/groups/${group.id}`}
           className="text-left flex-1 min-w-0"
         >
           <h3 className="font-display text-lg font-semibold text-ink truncate">
@@ -38,7 +38,7 @@ function GroupCard({
               {group.description}
             </p>
           )}
-        </button>
+        </Link>
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
@@ -53,26 +53,22 @@ function GroupCard({
                 onClick={() => setMenuOpen(false)}
               />
               <div className="absolute right-0 top-full mt-1 w-36 rounded-lg bg-surface border border-border shadow-lg z-20 overflow-hidden">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    router.push(`/groups/${group.id}`)
-                  }}
+                <Link
+                  href={`/groups/${group.id}`}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                 >
                   <BookOpen size={14} />
                   View
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    router.push(`/practice?group=${group.id}`)
-                  }}
+                </Link>
+                <Link
+                  href={`/practice?group=${group.id}`}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                 >
                   <BrainCircuit size={14} />
                   Practice
-                </button>
+                </Link>
                 <button
                   onClick={() => {
                     setMenuOpen(false)

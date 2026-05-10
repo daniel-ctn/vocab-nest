@@ -25,14 +25,13 @@ function VocabCard({
   entry: VocabularyEntry
   onDelete: (id: string) => void
 }) {
-  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="group relative p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
-        <button
-          onClick={() => router.push(`/vocabulary/${entry.id}`)}
+        <Link
+          href={`/vocabulary/${entry.id}`}
           className="text-left flex-1 min-w-0"
         >
           <h3 className="font-display text-lg font-semibold text-ink truncate">
@@ -41,7 +40,7 @@ function VocabCard({
           <p className="text-sm text-ink-secondary mt-1 line-clamp-2">
             {entry.definition}
           </p>
-        </button>
+        </Link>
         <div className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
@@ -56,26 +55,22 @@ function VocabCard({
                 onClick={() => setMenuOpen(false)}
               />
               <div className="absolute right-0 top-full mt-1 w-36 rounded-lg bg-surface border border-border shadow-lg z-20 overflow-hidden">
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    router.push(`/vocabulary/${entry.id}`)
-                  }}
+                <Link
+                  href={`/vocabulary/${entry.id}`}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                 >
                   <BookOpen size={14} />
                   View
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    router.push(`/vocabulary/${entry.id}/edit`)
-                  }}
+                </Link>
+                <Link
+                  href={`/vocabulary/${entry.id}/edit`}
+                  onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                 >
                   <Pencil size={14} />
                   Edit
-                </button>
+                </Link>
                 <button
                   onClick={() => {
                     setMenuOpen(false)

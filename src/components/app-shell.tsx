@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { PageProgress } from '@/components/page-progress'
 import { cn } from '@/lib/cn'
 
 const baseNavItems = [
@@ -115,6 +116,7 @@ export function AppShell({
 }) {
   return (
     <div className="flex min-h-dvh bg-cream">
+      <PageProgress />
       <Sidebar isAdmin={isAdmin} />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-surface sticky top-0 z-40">
