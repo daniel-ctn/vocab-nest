@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link'
 import {
   BookOpen,
   FolderOpen,
@@ -6,9 +6,9 @@ import {
   Flame,
   ArrowRight,
   Plus,
-} from "lucide-react";
-import { getCurrentUser } from "@/lib/session";
-import { getDashboardSummary } from "@/lib/data/dashboard";
+} from 'lucide-react'
+import { getCurrentUser } from '@/lib/session'
+import { getDashboardSummary } from '@/lib/data/dashboard'
 
 function StatCard({
   label,
@@ -16,16 +16,18 @@ function StatCard({
   icon: Icon,
   accent,
 }: {
-  label: string;
-  value: number;
-  icon: React.ElementType;
-  accent?: boolean;
+  label: string
+  value: number
+  icon: React.ElementType
+  accent?: boolean
 }) {
   return (
     <div className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border">
       <div
         className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${
-          accent ? "bg-accent text-white" : "bg-border-subtle text-ink-secondary"
+          accent
+            ? 'bg-accent text-white'
+            : 'bg-border-subtle text-ink-secondary'
         }`}
       >
         <Icon size={18} />
@@ -37,13 +39,13 @@ function StatCard({
         <div className="text-sm text-ink-secondary mt-1">{label}</div>
       </div>
     </div>
-  );
+  )
 }
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-  const stats = await getDashboardSummary(user.id);
-  const hasDue = stats.dueToday > 0;
+  const user = await getCurrentUser()
+  const stats = await getDashboardSummary(user.id)
+  const hasDue = stats.dueToday > 0
 
   return (
     <div className="space-y-8">
@@ -60,7 +62,8 @@ export default async function DashboardPage() {
         <div className="p-5 rounded-2xl bg-accent text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-xl font-semibold">
-              {stats.dueToday} word{stats.dueToday > 1 ? "s" : ""} due for review
+              {stats.dueToday} word{stats.dueToday > 1 ? 's' : ''} due for
+              review
             </h2>
             <p className="text-white/80 text-sm mt-1">
               Keep your streak alive and strengthen your memory.
@@ -82,11 +85,7 @@ export default async function DashboardPage() {
           value={stats.totalVocabulary}
           icon={BookOpen}
         />
-        <StatCard
-          label="Groups"
-          value={stats.totalGroups}
-          icon={FolderOpen}
-        />
+        <StatCard label="Groups" value={stats.totalGroups} icon={FolderOpen} />
         <StatCard
           label="Due today"
           value={stats.dueToday}
@@ -137,5 +136,5 @@ export default async function DashboardPage() {
         </Link>
       </div>
     </div>
-  );
+  )
 }

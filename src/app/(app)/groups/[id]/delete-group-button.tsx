@@ -1,24 +1,24 @@
-"use client";
+'use client'
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
-import { deleteGroup } from "@/lib/actions/groups";
+import { useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
+import { deleteGroup } from '@/lib/actions/groups'
 
 export function DeleteGroupButton({ id }: { id: string }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   function handleClick() {
-    if (!confirm("Delete this group?")) return;
+    if (!confirm('Delete this group?')) return
     startTransition(async () => {
       try {
-        await deleteGroup(id);
-        router.push("/groups");
+        await deleteGroup(id)
+        router.push('/groups')
       } catch {
-        alert("Failed to delete group");
+        alert('Failed to delete group')
       }
-    });
+    })
   }
 
   return (
@@ -30,5 +30,5 @@ export function DeleteGroupButton({ id }: { id: string }) {
       <Trash2 size={14} />
       Delete group
     </button>
-  );
+  )
 }

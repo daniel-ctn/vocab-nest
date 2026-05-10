@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { ArrowLeft, BookOpen, Tag } from "lucide-react";
-import { getCurrentUser } from "@/lib/session";
-import { getGroupWithVocabulary } from "@/lib/data/groups";
-import { DeleteGroupButton } from "./delete-group-button";
-import type { VocabularyEntry } from "@/lib/contracts";
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { ArrowLeft, BookOpen, Tag } from 'lucide-react'
+import { getCurrentUser } from '@/lib/session'
+import { getGroupWithVocabulary } from '@/lib/data/groups'
+import { DeleteGroupButton } from './delete-group-button'
+import type { VocabularyEntry } from '@/lib/contracts'
 
 function VocabRow({ entry }: { entry: VocabularyEntry }) {
   return (
@@ -34,22 +34,22 @@ function VocabRow({ entry }: { entry: VocabularyEntry }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default async function GroupDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
-  const user = await getCurrentUser();
-  const data = await getGroupWithVocabulary(id, user.id);
+  const { id } = await params
+  const user = await getCurrentUser()
+  const data = await getGroupWithVocabulary(id, user.id)
   if (!data) {
-    redirect("/groups");
+    redirect('/groups')
   }
 
-  const { group, items } = data;
+  const { group, items } = data
 
   return (
     <div className="space-y-6">
@@ -71,7 +71,7 @@ export default async function GroupDetailPage({
           )}
           <div className="mt-2 flex items-center gap-1.5 text-sm text-ink-secondary">
             <BookOpen size={14} />
-            {items.length} word{items.length !== 1 ? "s" : ""}
+            {items.length} word{items.length !== 1 ? 's' : ''}
           </div>
         </div>
         <DeleteGroupButton id={group.id} />
@@ -95,5 +95,5 @@ export default async function GroupDetailPage({
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import { VocabularyForm } from "./vocabulary-form";
+import { VocabularyForm } from './vocabulary-form'
 
 export default function NewVocabularyPage() {
-  return <VocabularyForm mode="create" />;
+  return <VocabularyForm mode="create" />
 }

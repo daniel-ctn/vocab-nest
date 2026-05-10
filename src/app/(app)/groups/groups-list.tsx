@@ -1,26 +1,20 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Loader2,
-  MoreHorizontal,
-  Trash2,
-  BookOpen,
-} from "lucide-react";
-import { createGroup, deleteGroup } from "@/lib/actions/groups";
-import type { CreateGroupRequest, Group } from "@/lib/contracts";
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus, Loader2, MoreHorizontal, Trash2, BookOpen } from 'lucide-react'
+import { createGroup, deleteGroup } from '@/lib/actions/groups'
+import type { CreateGroupRequest, Group } from '@/lib/contracts'
 
 function GroupCard({
   group,
   onDelete,
 }: {
-  group: Group;
-  onDelete: (id: string) => void;
+  group: Group
+  onDelete: (id: string) => void
 }) {
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="group relative p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors">
@@ -54,8 +48,8 @@ function GroupCard({
               <div className="absolute right-0 top-full mt-1 w-36 rounded-lg bg-surface border border-border shadow-lg z-20 overflow-hidden">
                 <button
                   onClick={() => {
-                    setMenuOpen(false);
-                    router.push(`/groups/${group.id}`);
+                    setMenuOpen(false)
+                    router.push(`/groups/${group.id}`)
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                 >
@@ -64,8 +58,8 @@ function GroupCard({
                 </button>
                 <button
                   onClick={() => {
-                    setMenuOpen(false);
-                    onDelete(group.id);
+                    setMenuOpen(false)
+                    onDelete(group.id)
                   }}
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-error hover:bg-error-subtle"
                 >
@@ -79,49 +73,49 @@ function GroupCard({
       </div>
       <div className="mt-3 flex items-center gap-1.5 text-xs text-ink-secondary">
         <BookOpen size={12} />
-        {group.vocabularyCount} word{group.vocabularyCount !== 1 ? "s" : ""}
+        {group.vocabularyCount} word{group.vocabularyCount !== 1 ? 's' : ''}
       </div>
     </div>
-  );
+  )
 }
 
 export function GroupsList({ groups }: { groups: Group[] }) {
-  const router = useRouter();
-  const [showForm, setShowForm] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [showForm, setShowForm] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newDesc, setNewDesc] = useState('')
+  const [isPending, startTransition] = useTransition()
 
   function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName.trim()) return;
+    e.preventDefault()
+    if (!newName.trim()) return
     const payload: CreateGroupRequest = {
       name: newName.trim(),
       description: newDesc.trim() || undefined,
-    };
+    }
     startTransition(async () => {
       try {
-        await createGroup(payload);
-        setNewName("");
-        setNewDesc("");
-        setShowForm(false);
-        router.refresh();
+        await createGroup(payload)
+        setNewName('')
+        setNewDesc('')
+        setShowForm(false)
+        router.refresh()
       } catch {
-        alert("Failed to create group");
+        alert('Failed to create group')
       }
-    });
+    })
   }
 
   function handleDelete(id: string) {
-    if (!confirm("Delete this group?")) return;
+    if (!confirm('Delete this group?')) return
     startTransition(async () => {
       try {
-        await deleteGroup(id);
-        router.refresh();
+        await deleteGroup(id)
+        router.refresh()
       } catch {
-        alert("Failed to delete");
+        alert('Failed to delete')
       }
-    });
+    })
   }
 
   return (
@@ -211,5 +205,5 @@ export function GroupsList({ groups }: { groups: Group[] }) {
         </div>
       )}
     </div>
-  );
+  )
 }

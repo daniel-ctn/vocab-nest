@@ -1,24 +1,24 @@
-"use client";
+'use client'
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
-import { deleteVocabulary } from "@/lib/actions/vocabulary";
+import { useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
+import { deleteVocabulary } from '@/lib/actions/vocabulary'
 
 export function DeleteVocabularyButton({ id }: { id: string }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   function handleClick() {
-    if (!confirm("Delete this entry?")) return;
+    if (!confirm('Delete this entry?')) return
     startTransition(async () => {
       try {
-        await deleteVocabulary(id);
-        router.push("/vocabulary");
+        await deleteVocabulary(id)
+        router.push('/vocabulary')
       } catch {
-        alert("Failed to delete");
+        alert('Failed to delete')
       }
-    });
+    })
   }
 
   return (
@@ -31,5 +31,5 @@ export function DeleteVocabularyButton({ id }: { id: string }) {
       <Trash2 size={16} />
       Delete
     </button>
-  );
+  )
 }

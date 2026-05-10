@@ -1,9 +1,9 @@
-import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { vocabularyEntries } from "@/lib/db/schema";
-import type { VocabularyEntry } from "@/lib/contracts";
+import { and, eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { vocabularyEntries } from '@/lib/db/schema'
+import type { VocabularyEntry } from '@/lib/contracts'
 
-type VocabularyRow = typeof vocabularyEntries.$inferSelect;
+type VocabularyRow = typeof vocabularyEntries.$inferSelect
 
 function toVocabularyEntry(row: VocabularyRow): VocabularyEntry {
   return {
@@ -16,32 +16,31 @@ function toVocabularyEntry(row: VocabularyRow): VocabularyEntry {
     tags: row.tags,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  };
+  }
 }
 
-export async function listVocabulary(userId: string): Promise<VocabularyEntry[]> {
+export async function listVocabulary(
+  userId: string
+): Promise<VocabularyEntry[]> {
   const rows = await db
     .select()
     .from(vocabularyEntries)
     .where(eq(vocabularyEntries.userId, userId))
-    .orderBy(vocabularyEntries.updatedAt);
-  return rows.map(toVocabularyEntry);
+    .orderBy(vocabularyEntries.updatedAt)
+  return rows.map(toVocabularyEntry)
 }
 
 export async function getVocabulary(
   id: string,
-  userId: string,
+  userId: string
 ): Promise<VocabularyEntry | null> {
   const rows = await db
     .select()
     .from(vocabularyEntries)
     .where(
-      and(
-        eq(vocabularyEntries.id, id),
-        eq(vocabularyEntries.userId, userId),
-      ),
+      and(eq(vocabularyEntries.id, id), eq(vocabularyEntries.userId, userId))
     )
-    .limit(1);
-  const row = rows[0];
-  return row ? toVocabularyEntry(row) : null;
+    .limit(1)
+  const row = rows[0]
+  return row ? toVocabularyEntry(row) : null
 }

@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   BookOpen,
@@ -9,19 +9,19 @@ import {
   BrainCircuit,
   LogOut,
   Feather,
-} from "lucide-react";
-import { signOut } from "@/lib/auth-client";
-import { cn } from "@/lib/cn";
+} from 'lucide-react'
+import { signOut } from '@/lib/auth-client'
+import { cn } from '@/lib/cn'
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/vocabulary", label: "Vocabulary", icon: BookOpen },
-  { href: "/groups", label: "Groups", icon: FolderOpen },
-  { href: "/practice", label: "Practice", icon: BrainCircuit },
-];
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/vocabulary', label: 'Vocabulary', icon: BookOpen },
+  { href: '/groups', label: 'Groups', icon: FolderOpen },
+  { href: '/practice', label: 'Practice', icon: BrainCircuit },
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return (
     <aside className="hidden lg:flex flex-col w-64 h-dvh sticky top-0 border-r border-border bg-surface">
@@ -36,22 +36,22 @@ export function Sidebar() {
 
       <nav className="flex-1 px-4 py-4 space-y-1">
         {navItems.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
-                  ? "bg-accent-subtle text-accent"
-                  : "text-ink-secondary hover:bg-border-subtle hover:text-ink",
+                  ? 'bg-accent-subtle text-accent'
+                  : 'text-ink-secondary hover:bg-border-subtle hover:text-ink'
               )}
             >
               <item.icon size={18} />
               {item.label}
             </Link>
-          );
+          )
         })}
       </nav>
 
@@ -65,34 +65,34 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
-  );
+  )
 }
 
 export function MobileNav() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-surface border-t border-border">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 w-full h-full text-xs font-medium transition-colors",
-                active ? "text-accent" : "text-ink-tertiary",
+                'flex flex-col items-center justify-center gap-1 w-full h-full text-xs font-medium transition-colors',
+                active ? 'text-accent' : 'text-ink-tertiary'
               )}
             >
               <item.icon size={20} />
               <span>{item.label}</span>
             </Link>
-          );
+          )
         })}
       </div>
     </nav>
-  );
+  )
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -106,5 +106,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <MobileNav />
     </div>
-  );
+  )
 }

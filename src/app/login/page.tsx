@@ -1,37 +1,37 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Feather, Loader2 } from "lucide-react";
-import { signIn } from "@/lib/auth-client";
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Feather, Loader2 } from 'lucide-react'
+import { signIn } from '@/lib/auth-client'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSubmitting(true);
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
     try {
       const result = await signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
-      });
+        callbackURL: '/dashboard',
+      })
       if (result.error) {
-        setError(result.error.message || "Failed to sign in");
+        setError(result.error.message || 'Failed to sign in')
       } else {
-        router.push("/dashboard");
+        router.push('/dashboard')
       }
     } catch (err) {
-      setError((err as Error).message || "Failed to sign in");
+      setError((err as Error).message || 'Failed to sign in')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-6 text-sm text-ink-secondary text-center">
-          Don&apos;t have an account?{" "}
+          Don&apos;t have an account?{' '}
           <Link
             href="/register"
             className="font-medium text-accent hover:underline"
@@ -109,5 +109,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }

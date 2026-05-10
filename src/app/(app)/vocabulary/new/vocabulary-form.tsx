@@ -1,41 +1,29 @@
-"use client";
+'use client'
 
-import { useState, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Loader2,
-  Plus,
-  X,
-  Save,
-} from "lucide-react";
-import {
-  createVocabulary,
-  updateVocabulary,
-} from "@/lib/actions/vocabulary";
-import type {
-  CreateVocabularyRequest,
-  VocabularyEntry,
-} from "@/lib/contracts";
+import { useState, useTransition, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, Loader2, Plus, X, Save } from 'lucide-react'
+import { createVocabulary, updateVocabulary } from '@/lib/actions/vocabulary'
+import type { CreateVocabularyRequest, VocabularyEntry } from '@/lib/contracts'
 
 function TagInput({
   tags,
   onChange,
   placeholder,
 }: {
-  tags: string[];
-  onChange: (tags: string[]) => void;
-  placeholder?: string;
+  tags: string[]
+  onChange: (tags: string[]) => void
+  placeholder?: string
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('')
 
   function add() {
-    const val = input.trim();
-    if (!val) return;
+    const val = input.trim()
+    if (!val) return
     if (!tags.includes(val)) {
-      onChange([...tags, val]);
+      onChange([...tags, val])
     }
-    setInput("");
+    setInput('')
   }
 
   return (
@@ -62,9 +50,9 @@ function TagInput({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
             }
           }}
           placeholder={placeholder}
@@ -79,23 +67,23 @@ function TagInput({
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 function ExampleInput({
   examples,
   onChange,
 }: {
-  examples: string[];
-  onChange: (examples: string[]) => void;
+  examples: string[]
+  onChange: (examples: string[]) => void
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('')
 
   function add() {
-    const val = input.trim();
-    if (!val) return;
-    onChange([...examples, val]);
-    setInput("");
+    const val = input.trim()
+    if (!val) return
+    onChange([...examples, val])
+    setInput('')
   }
 
   return (
@@ -120,9 +108,9 @@ function ExampleInput({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
             }
           }}
           placeholder="Add an example sentence"
@@ -137,28 +125,32 @@ function ExampleInput({
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 type VocabularyFormProps = {
-  mode: "create" | "edit";
-  entry?: VocabularyEntry;
-  extraActions?: ReactNode;
-};
+  mode: 'create' | 'edit'
+  entry?: VocabularyEntry
+  extraActions?: ReactNode
+}
 
-export function VocabularyForm({ mode, entry, extraActions }: VocabularyFormProps) {
-  const router = useRouter();
-  const [term, setTerm] = useState(entry?.term ?? "");
-  const [definition, setDefinition] = useState(entry?.definition ?? "");
-  const [language, setLanguage] = useState(entry?.language ?? "");
-  const [partOfSpeech, setPartOfSpeech] = useState(entry?.partOfSpeech ?? "");
-  const [examples, setExamples] = useState<string[]>(entry?.examples ?? []);
-  const [tags, setTags] = useState<string[]>(entry?.tags ?? []);
-  const [isPending, startTransition] = useTransition();
+export function VocabularyForm({
+  mode,
+  entry,
+  extraActions,
+}: VocabularyFormProps) {
+  const router = useRouter()
+  const [term, setTerm] = useState(entry?.term ?? '')
+  const [definition, setDefinition] = useState(entry?.definition ?? '')
+  const [language, setLanguage] = useState(entry?.language ?? '')
+  const [partOfSpeech, setPartOfSpeech] = useState(entry?.partOfSpeech ?? '')
+  const [examples, setExamples] = useState<string[]>(entry?.examples ?? [])
+  const [tags, setTags] = useState<string[]>(entry?.tags ?? [])
+  const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!term.trim() || !definition.trim()) return;
+    e.preventDefault()
+    if (!term.trim() || !definition.trim()) return
 
     const payload: CreateVocabularyRequest = {
       term: term.trim(),
@@ -167,20 +159,20 @@ export function VocabularyForm({ mode, entry, extraActions }: VocabularyFormProp
       partOfSpeech: partOfSpeech.trim() || undefined,
       examples: examples.length > 0 ? examples : undefined,
       tags: tags.length > 0 ? tags : undefined,
-    };
+    }
 
     startTransition(async () => {
       try {
-        if (mode === "create") {
-          await createVocabulary(payload);
+        if (mode === 'create') {
+          await createVocabulary(payload)
         } else if (entry) {
-          await updateVocabulary(entry.id, payload);
+          await updateVocabulary(entry.id, payload)
         }
-        router.push("/vocabulary");
+        router.push('/vocabulary')
       } catch {
-        alert("Failed to save");
+        alert('Failed to save')
       }
-    });
+    })
   }
 
   return (
@@ -194,7 +186,7 @@ export function VocabularyForm({ mode, entry, extraActions }: VocabularyFormProp
       </button>
 
       <h1 className="font-display text-3xl font-semibold text-ink mb-6">
-        {mode === "create" ? "Add a word" : "Edit word"}
+        {mode === 'create' ? 'Add a word' : 'Edit word'}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -276,7 +268,7 @@ export function VocabularyForm({ mode, entry, extraActions }: VocabularyFormProp
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
             <Save size={16} />
-            {mode === "create" ? "Save word" : "Save changes"}
+            {mode === 'create' ? 'Save word' : 'Save changes'}
           </button>
           <button
             type="button"
@@ -289,5 +281,5 @@ export function VocabularyForm({ mode, entry, extraActions }: VocabularyFormProp
         </div>
       </form>
     </div>
-  );
+  )
 }

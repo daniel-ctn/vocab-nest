@@ -1,51 +1,42 @@
-"use client";
+'use client'
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Loader2,
-  Check,
-  X,
-  PartyPopper,
-  RotateCcw,
-} from "lucide-react";
-import {
-  completePractice,
-  reviewPracticeItem,
-} from "@/lib/actions/practice";
-import type { PracticeSession } from "@/lib/contracts";
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Loader2, Check, X, PartyPopper, RotateCcw } from 'lucide-react'
+import { completePractice, reviewPracticeItem } from '@/lib/actions/practice'
+import type { PracticeSession } from '@/lib/contracts'
 
 export function PracticeRunner({
   session,
   definitions,
 }: {
-  session: PracticeSession;
-  definitions: Record<string, string>;
+  session: PracticeSession
+  definitions: Record<string, string>
 }) {
-  const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [revealed, setRevealed] = useState(false)
+  const [completed, setCompleted] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  const item = session.items[currentIndex];
+  const item = session.items[currentIndex]
 
   function handleReview(remembered: boolean) {
-    if (!item || isPending) return;
+    if (!item || isPending) return
     startTransition(async () => {
       try {
-        await reviewPracticeItem(session.id, item.id, { remembered });
+        await reviewPracticeItem(session.id, item.id, { remembered })
         if (currentIndex + 1 >= session.items.length) {
-          await completePractice(session.id);
-          setCompleted(true);
+          await completePractice(session.id)
+          setCompleted(true)
         } else {
-          setCurrentIndex((i) => i + 1);
-          setRevealed(false);
+          setCurrentIndex((i) => i + 1)
+          setRevealed(false)
         }
       } catch {
-        alert("Failed to submit review");
+        alert('Failed to submit review')
       }
-    });
+    })
   }
 
   if (completed) {
@@ -59,7 +50,7 @@ export function PracticeRunner({
         </h2>
         <p className="text-ink-secondary mt-2 max-w-sm">
           Great job! You reviewed {session.items.length} word
-          {session.items.length > 1 ? "s" : ""} today.
+          {session.items.length > 1 ? 's' : ''} today.
         </p>
         <div className="flex items-center gap-3 mt-6">
           <button
@@ -70,20 +61,20 @@ export function PracticeRunner({
             Practice again
           </button>
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push('/dashboard')}
             className="px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-ink-secondary hover:bg-border-subtle transition-colors"
           >
             Go to dashboard
           </button>
         </div>
       </div>
-    );
+    )
   }
 
-  if (!item) return null;
+  if (!item) return null
 
-  const progress = (currentIndex / session.items.length) * 100;
-  const definition = definitions[item.vocabularyId] ?? "Definition not found";
+  const progress = (currentIndex / session.items.length) * 100
+  const definition = definitions[item.vocabularyId] ?? 'Definition not found'
 
   return (
     <div className="max-w-lg mx-auto">
@@ -156,5 +147,5 @@ export function PracticeRunner({
         )}
       </div>
     </div>
-  );
+  )
 }

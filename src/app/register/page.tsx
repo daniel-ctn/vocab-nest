@@ -1,39 +1,39 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Feather, Loader2 } from "lucide-react";
-import { signUp } from "@/lib/auth-client";
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Feather, Loader2 } from 'lucide-react'
+import { signUp } from '@/lib/auth-client'
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSubmitting(true);
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
     try {
       const result = await signUp.email({
         name,
         email,
         password,
-        callbackURL: "/dashboard",
-      });
+        callbackURL: '/dashboard',
+      })
       if (result.error) {
-        setError(result.error.message || "Failed to create account");
+        setError(result.error.message || 'Failed to create account')
       } else {
-        router.push("/dashboard");
+        router.push('/dashboard')
       }
     } catch (err) {
-      setError((err as Error).message || "Failed to create account");
+      setError((err as Error).message || 'Failed to create account')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
@@ -115,7 +115,7 @@ export default function RegisterPage() {
         </form>
 
         <p className="mt-6 text-sm text-ink-secondary text-center">
-          Already have an account?{" "}
+          Already have an account?{' '}
           <Link
             href="/login"
             className="font-medium text-accent hover:underline"
@@ -125,5 +125,5 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
-  );
+  )
 }

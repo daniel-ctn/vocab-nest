@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Search,
   Plus,
@@ -12,42 +12,36 @@ import {
   Trash2,
   Pencil,
   X,
-} from "lucide-react";
-import {
-  deleteVocabulary,
-  searchVocabulary,
-} from "@/lib/actions/vocabulary";
-import type {
-  VocabularyEntry,
-  VocabularySearchResult,
-} from "@/lib/contracts";
+} from 'lucide-react'
+import { deleteVocabulary, searchVocabulary } from '@/lib/actions/vocabulary'
+import type { VocabularyEntry, VocabularySearchResult } from '@/lib/contracts'
 
 type CardEntry = {
-  id: string;
-  term: string;
-  definition: string;
-  language?: string;
-  partOfSpeech?: string;
-  tags: string[];
-  isSearchResult: boolean;
-};
+  id: string
+  term: string
+  definition: string
+  language?: string
+  partOfSpeech?: string
+  tags: string[]
+  isSearchResult: boolean
+}
 
 function VocabCard({
   entry,
   onDelete,
 }: {
-  entry: CardEntry;
-  onDelete: (id: string) => void;
+  entry: CardEntry
+  onDelete: (id: string) => void
 }) {
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <div className="group relative p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <button
           onClick={() => {
-            if (!entry.isSearchResult) router.push(`/vocabulary/${entry.id}`);
+            if (!entry.isSearchResult) router.push(`/vocabulary/${entry.id}`)
           }}
           className="text-left flex-1 min-w-0"
         >
@@ -75,8 +69,8 @@ function VocabCard({
                 <div className="absolute right-0 top-full mt-1 w-36 rounded-lg bg-surface border border-border shadow-lg z-20 overflow-hidden">
                   <button
                     onClick={() => {
-                      setMenuOpen(false);
-                      router.push(`/vocabulary/${entry.id}`);
+                      setMenuOpen(false)
+                      router.push(`/vocabulary/${entry.id}`)
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
                   >
@@ -85,8 +79,8 @@ function VocabCard({
                   </button>
                   <button
                     onClick={() => {
-                      setMenuOpen(false);
-                      onDelete(entry.id);
+                      setMenuOpen(false)
+                      onDelete(entry.id)
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-error hover:bg-error-subtle"
                   >
@@ -122,7 +116,7 @@ function VocabCard({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function entryToCard(entry: VocabularyEntry): CardEntry {
@@ -134,12 +128,12 @@ function entryToCard(entry: VocabularyEntry): CardEntry {
     partOfSpeech: entry.partOfSpeech,
     tags: entry.tags,
     isSearchResult: false,
-  };
+  }
 }
 
 function searchResultToCard(
   result: VocabularySearchResult,
-  index: number,
+  index: number
 ): CardEntry {
   return {
     id: `search-${index}`,
@@ -149,48 +143,48 @@ function searchResultToCard(
     partOfSpeech: result.partOfSpeech,
     tags: [],
     isSearchResult: true,
-  };
+  }
 }
 
 export function VocabularyList({ entries }: { entries: VocabularyEntry[] }) {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<CardEntry[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [, startTransition] = useTransition();
+  const router = useRouter()
+  const [query, setQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<CardEntry[] | null>(null)
+  const [searching, setSearching] = useState(false)
+  const [, startTransition] = useTransition()
 
   useEffect(() => {
     if (!query.trim()) {
-      setSearchResults(null);
-      return;
+      setSearchResults(null)
+      return
     }
     const t = setTimeout(async () => {
-      setSearching(true);
+      setSearching(true)
       try {
-        const results = await searchVocabulary({ query });
-        setSearchResults(results.map(searchResultToCard));
+        const results = await searchVocabulary({ query })
+        setSearchResults(results.map(searchResultToCard))
       } catch {
-        setSearchResults([]);
+        setSearchResults([])
       } finally {
-        setSearching(false);
+        setSearching(false)
       }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [query]);
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query])
 
   function handleDelete(id: string) {
-    if (!confirm("Delete this entry?")) return;
+    if (!confirm('Delete this entry?')) return
     startTransition(async () => {
       try {
-        await deleteVocabulary(id);
-        router.refresh();
+        await deleteVocabulary(id)
+        router.refresh()
       } catch {
-        alert("Failed to delete");
+        alert('Failed to delete')
       }
-    });
+    })
   }
 
-  const displayed: CardEntry[] = searchResults ?? entries.map(entryToCard);
+  const displayed: CardEntry[] = searchResults ?? entries.map(entryToCard)
 
   return (
     <div className="space-y-6">
@@ -200,7 +194,7 @@ export function VocabularyList({ entries }: { entries: VocabularyEntry[] }) {
             Vocabulary
           </h1>
           <p className="text-ink-secondary mt-1">
-            {entries.length} word{entries.length !== 1 ? "s" : ""} collected
+            {entries.length} word{entries.length !== 1 ? 's' : ''} collected
           </p>
         </div>
         <Link
@@ -226,7 +220,7 @@ export function VocabularyList({ entries }: { entries: VocabularyEntry[] }) {
         />
         {query && !searching && (
           <button
-            onClick={() => setQuery("")}
+            onClick={() => setQuery('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-tertiary hover:text-ink"
           >
             <X size={16} />
@@ -243,7 +237,7 @@ export function VocabularyList({ entries }: { entries: VocabularyEntry[] }) {
       {displayed.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-ink-secondary">
-            {query ? "No matches found." : "No words yet."}
+            {query ? 'No matches found.' : 'No words yet.'}
           </p>
           {!query && (
             <Link
@@ -258,14 +252,10 @@ export function VocabularyList({ entries }: { entries: VocabularyEntry[] }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {displayed.map((entry) => (
-            <VocabCard
-              key={entry.id}
-              entry={entry}
-              onDelete={handleDelete}
-            />
+            <VocabCard key={entry.id} entry={entry} onDelete={handleDelete} />
           ))}
         </div>
       )}
     </div>
-  );
+  )
 }

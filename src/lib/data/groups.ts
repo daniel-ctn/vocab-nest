@@ -1,11 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db";
-import {
-  groups,
-  vocabularyEntries,
-  vocabularyGroups,
-} from "@/lib/db/schema";
-import type { Group, VocabularyEntry } from "@/lib/contracts";
+import { and, eq, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { groups, vocabularyEntries, vocabularyGroups } from '@/lib/db/schema'
+import type { Group, VocabularyEntry } from '@/lib/contracts'
 
 export async function listGroups(userId: string): Promise<Group[]> {
   const rows = await db
@@ -23,7 +19,7 @@ export async function listGroups(userId: string): Promise<Group[]> {
     })
     .from(groups)
     .where(eq(groups.userId, userId))
-    .orderBy(groups.updatedAt);
+    .orderBy(groups.updatedAt)
 
   return rows.map((g) => ({
     id: g.id,
@@ -32,21 +28,21 @@ export async function listGroups(userId: string): Promise<Group[]> {
     vocabularyCount: g.vocabularyCount,
     createdAt: g.createdAt.toISOString(),
     updatedAt: g.updatedAt.toISOString(),
-  }));
+  }))
 }
 
 export async function getGroupWithVocabulary(
   id: string,
-  userId: string,
+  userId: string
 ): Promise<{ group: Group; items: VocabularyEntry[] } | null> {
   const groupRows = await db
     .select()
     .from(groups)
     .where(and(eq(groups.id, id), eq(groups.userId, userId)))
-    .limit(1);
+    .limit(1)
 
-  const group = groupRows[0];
-  if (!group) return null;
+  const group = groupRows[0]
+  if (!group) return null
 
   const vocabRows = await db
     .select({
@@ -63,9 +59,9 @@ export async function getGroupWithVocabulary(
     .from(vocabularyEntries)
     .innerJoin(
       vocabularyGroups,
-      eq(vocabularyEntries.id, vocabularyGroups.vocabularyId),
+      eq(vocabularyEntries.id, vocabularyGroups.vocabularyId)
     )
-    .where(eq(vocabularyGroups.groupId, id));
+    .where(eq(vocabularyGroups.groupId, id))
 
   const items: VocabularyEntry[] = vocabRows.map((v) => ({
     id: v.id,
@@ -77,7 +73,7 @@ export async function getGroupWithVocabulary(
     tags: v.tags,
     createdAt: v.createdAt.toISOString(),
     updatedAt: v.updatedAt.toISOString(),
-  }));
+  }))
 
   return {
     group: {
@@ -89,5 +85,5 @@ export async function getGroupWithVocabulary(
       updatedAt: group.updatedAt.toISOString(),
     },
     items,
-  };
+  }
 }

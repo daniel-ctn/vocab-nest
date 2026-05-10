@@ -1,46 +1,43 @@
-import { and, eq, inArray, isNull } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { db } from '@/lib/db'
 import {
   practiceItems,
   practiceSessions,
   vocabularyEntries,
-} from "@/lib/db/schema";
-import type { PracticeSession } from "@/lib/contracts";
+} from '@/lib/db/schema'
+import type { PracticeSession } from '@/lib/contracts'
 
 export type TodayPractice = {
-  session: PracticeSession;
-  definitions: Record<string, string>;
-};
+  session: PracticeSession
+  definitions: Record<string, string>
+}
 
 export async function getOrCreateTodayPractice(
-  userId: string,
+  userId: string
 ): Promise<TodayPractice | null> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10)
 
   let session = await db
     .select()
     .from(practiceSessions)
     .where(
-      and(
-        eq(practiceSessions.userId, userId),
-        eq(practiceSessions.date, today),
-      ),
+      and(eq(practiceSessions.userId, userId), eq(practiceSessions.date, today))
     )
     .limit(1)
-    .then((rows) => rows[0] ?? null);
+    .then((rows) => rows[0] ?? null)
 
   if (!session) {
-    const sessionId = crypto.randomUUID();
-    const now = new Date();
+    const sessionId = crypto.randomUUID()
+    const now = new Date()
 
     await db.insert(practiceSessions).values({
       id: sessionId,
       userId,
       date: today,
-      status: "pending",
+      status: 'pending',
       createdAt: now,
       updatedAt: now,
-    });
+    })
 
     const dueVocab = await db
       .select({
@@ -48,7 +45,7 @@ export async function getOrCreateTodayPractice(
         term: vocabularyEntries.term,
       })
       .from(vocabularyEntries)
-      .where(eq(vocabularyEntries.userId, userId));
+      .where(eq(vocabularyEntries.userId, userId))
 
     if (dueVocab.length > 0) {
       await db.insert(practiceItems).values(
@@ -58,8 +55,8 @@ export async function getOrCreateTodayPractice(
           vocabularyId: v.id,
           prompt: v.term,
           dueAt: now,
-        })),
-      );
+        }))
+      )
     }
 
     session = (await db
@@ -67,7 +64,7 @@ export async function getOrCreateTodayPractice(
       .from(practiceSessions)
       .where(eq(practiceSessions.id, sessionId))
       .limit(1)
-      .then((rows) => rows[0]))!;
+      .then((rows) => rows[0]))!
   }
 
   const items = await db
@@ -81,36 +78,36 @@ export async function getOrCreateTodayPractice(
     .from(practiceItems)
     .leftJoin(
       vocabularyEntries,
-      eq(practiceItems.vocabularyId, vocabularyEntries.id),
+      eq(practiceItems.vocabularyId, vocabularyEntries.id)
     )
     .where(
       and(
         eq(practiceItems.practiceSessionId, session.id),
-        isNull(practiceItems.reviewedAt),
-      ),
-    );
+        isNull(practiceItems.reviewedAt)
+      )
+    )
 
-  if (items.length === 0) return null;
+  if (items.length === 0) return null
 
-  const vocabIds = items.map((i) => i.vocabularyId);
+  const vocabIds = items.map((i) => i.vocabularyId)
   const definitionRows = await db
     .select({
       id: vocabularyEntries.id,
       definition: vocabularyEntries.definition,
     })
     .from(vocabularyEntries)
-    .where(inArray(vocabularyEntries.id, vocabIds));
+    .where(inArray(vocabularyEntries.id, vocabIds))
 
-  const definitions: Record<string, string> = {};
+  const definitions: Record<string, string> = {}
   for (const row of definitionRows) {
-    definitions[row.id] = row.definition;
+    definitions[row.id] = row.definition
   }
 
   return {
     session: {
       id: session.id,
       date: session.date,
-      status: session.status as "pending" | "in_progress" | "completed",
+      status: session.status as 'pending' | 'in_progress' | 'completed',
       items: items.map((i) => ({
         id: i.id,
         vocabularyId: i.vocabularyId,
@@ -120,5 +117,5 @@ export async function getOrCreateTodayPractice(
       })),
     },
     definitions,
-  };
+  }
 }

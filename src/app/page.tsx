@@ -1,28 +1,28 @@
-"use client";
+'use client'
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Feather, ArrowRight } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Feather, ArrowRight } from 'lucide-react'
+import { useSession } from '@/lib/auth-client'
+import { Loader2 } from 'lucide-react'
 
 export default function HomePage() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
+  const { data: session, isPending } = useSession()
+  const router = useRouter()
 
   useEffect(() => {
     if (!isPending && session?.user) {
-      router.replace("/dashboard");
+      router.replace('/dashboard')
     }
-  }, [isPending, session, router]);
+  }, [isPending, session, router])
 
   if (isPending) {
     return (
       <div className="flex items-center justify-center min-h-dvh bg-cream">
         <Loader2 className="animate-spin text-accent" size={28} />
       </div>
-    );
+    )
   }
 
   return (
@@ -84,5 +84,5 @@ export default function HomePage() {
         &copy; {new Date().getFullYear()} Vocab Nest
       </footer>
     </div>
-  );
+  )
 }

@@ -1,12 +1,12 @@
-import Link from "next/link";
-import { ArrowRight, BrainCircuit } from "lucide-react";
-import { getCurrentUser } from "@/lib/session";
-import { getOrCreateTodayPractice } from "@/lib/data/practice";
-import { PracticeRunner } from "./practice-runner";
+import Link from 'next/link'
+import { ArrowRight, BrainCircuit } from 'lucide-react'
+import { getCurrentUser } from '@/lib/session'
+import { getOrCreateTodayPractice } from '@/lib/data/practice'
+import { PracticeRunner } from './practice-runner'
 
 export default async function PracticePage() {
-  const user = await getCurrentUser();
-  const today = await getOrCreateTodayPractice(user.id);
+  const user = await getCurrentUser()
+  const today = await getOrCreateTodayPractice(user.id)
 
   if (!today) {
     return (
@@ -29,8 +29,10 @@ export default async function PracticePage() {
           Add a word
         </Link>
       </div>
-    );
+    )
   }
 
-  return <PracticeRunner session={today.session} definitions={today.definitions} />;
+  return (
+    <PracticeRunner session={today.session} definitions={today.definitions} />
+  )
 }
