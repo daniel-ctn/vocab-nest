@@ -21,14 +21,7 @@ type ApiRequestOptions<Body> = {
 };
 
 const getApiBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  if (!baseUrl) {
-    throw new ApiClientError("NEXT_PUBLIC_API_BASE_URL is not configured.", {
-      code: "API_BASE_URL_MISSING",
-    });
-  }
-
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
   return baseUrl.replace(/\/+$/, "");
 };
 

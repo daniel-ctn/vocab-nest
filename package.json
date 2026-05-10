@@ -2,8 +2,9 @@
   "name": "vocab-nest",
   "private": true,
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
-    "generate:api": "pnpm --filter @vocab-nest/api openapi:write && pnpm --filter @vocab-nest/web generate:api",
+    "dev": "pnpm --filter @vocab-nest/web dev",
+    "db:generate": "pnpm --filter @vocab-nest/web db:generate",
+    "db:migrate": "pnpm --filter @vocab-nest/web db:migrate",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {
