@@ -20,10 +20,20 @@ export const metadata: Metadata = {
   description: 'A thoughtful space for building your vocabulary',
 }
 
+const themeScript = `
+  (function(){
+    const t = localStorage.getItem('vn-theme') || 'light'
+    if (t === 'dark') document.documentElement.classList.add('dark')
+  })()
+`
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${workSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {children}
+      </body>
     </html>
   )
 }

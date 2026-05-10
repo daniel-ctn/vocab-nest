@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Feather, ArrowRight } from 'lucide-react'
 import { useSession } from '@/lib/auth-client'
 import { Loader2 } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function HomePage() {
   const { data: session, isPending } = useSession()
@@ -37,6 +38,7 @@ export default function HomePage() {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
           <Link
             href="/login"
             className="text-sm font-medium text-ink-secondary hover:text-ink transition-colors"

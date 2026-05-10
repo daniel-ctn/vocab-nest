@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Feather, Loader2 } from 'lucide-react'
 import { signUp } from '@/lib/auth-client'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -38,7 +39,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-cream flex flex-col items-center justify-center px-6">
+    <div className="min-h-dvh bg-cream flex flex-col items-center justify-center px-6 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
+      </div>
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2.5 mb-10">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent text-white">
