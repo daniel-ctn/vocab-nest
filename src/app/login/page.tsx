@@ -4,13 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Feather, Loader2 } from "lucide-react";
-import { useAuth } from "@/components/auth-provider";
-import { apiPost } from "@/lib/api-client";
-import type { AuthResponse } from "@/lib/contracts";
+import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,12 +18,16 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     try {
-      const data = await apiPost<AuthResponse>("/api/auth/login", {
+      const result = await signIn.email({
         email,
         password,
+        callbackURL: "/dashboard",
       });
-      await login(data.token);
-      router.replace("/dashboard");
+      if (result.error) {
+        setError(result.error.message || "Failed to sign in");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError((err as Error).message || "Failed to sign in");
     } finally {

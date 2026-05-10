@@ -1,43 +1,21 @@
-import type { ApiResponse } from "@/lib/contracts";
-
 const API_BASE = "";
-
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("vn_token");
-}
-
-export function setToken(token: string) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("vn_token", token);
-  }
-}
-
-export function removeToken() {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("vn_token");
-  }
-}
 
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) ?? {}),
   };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
-  const json = (await res.json()) as ApiResponse<T>;
+  const json = (await res.json()) as { success: true; data: T } | { success: false; error: { code: string; message: string; details?: unknown } };
 
   if (!json.success) {
     const err = new Error(json.error.message);

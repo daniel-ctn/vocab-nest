@@ -10,7 +10,7 @@ import {
   LogOut,
   Feather,
 } from "lucide-react";
-import { useAuth } from "@/components/auth-provider";
+import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/cn";
 
 const navItems = [
@@ -22,7 +22,6 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
 
   return (
     <aside className="hidden lg:flex flex-col w-64 h-dvh sticky top-0 border-r border-border bg-surface">
@@ -58,7 +57,7 @@ export function Sidebar() {
 
       <div className="px-4 py-4 border-t border-border">
         <button
-          onClick={logout}
+          onClick={() => signOut()}
           className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors"
         >
           <LogOut size={18} />

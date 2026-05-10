@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z, ZodError, type ZodTypeAny } from "zod";
 import type { ApiError } from "@/lib/contracts";
-import { verifyJwt } from "./auth/jwt";
+import { auth } from "@/lib/auth";
 
 export class ApiException extends Error {
   constructor(
@@ -58,19 +58,13 @@ export type AuthContext = {
 };
 
 export async function requireAuth(request: Request): Promise<AuthContext> {
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : undefined;
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
 
-  if (!token) {
-    throw new ApiException(401, "UNAUTHORIZED", "A bearer token is required.");
+  if (!session || !session.user) {
+    throw new ApiException(401, "UNAUTHORIZED", "Authentication required.");
   }
 
-  try {
-    const { payload } = await verifyJwt(token);
-    return { userId: payload.sub!, email: payload.email as string };
-  } catch {
-    throw new ApiException(401, "UNAUTHORIZED", "Invalid or expired token.");
-  }
+  return { userId: session.user.id, email: session.user.email };
 }
