@@ -17,5 +17,7 @@ export const config = {
     '/vocabulary/:path*',
     '/stats/:path*',
     '/admin/:path*',
+    '/settings/:path*',
+    '/upgrade',
   ],
 }

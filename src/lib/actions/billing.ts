@@ -1,8 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import Stripe from 'stripe'
-import { stripe, getStripePriceId, getStripeAnnualPriceId } from '@/lib/stripe'
+import { getStripe, getStripePriceId, getStripeAnnualPriceId } from '@/lib/stripe'
 import { requireUser } from '@/lib/session'
 import { getSubscription } from '@/lib/data/subscription'
 
@@ -14,7 +13,7 @@ export async function createCheckoutSession(
 
   const selectedPriceId = priceId || getStripeAnnualPriceId() || getStripePriceId()
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: sub?.stripeCustomerId ?? undefined,
     customer_email: sub?.stripeCustomerId ? undefined : user.email,
     line_items: [
@@ -51,7 +50,7 @@ export async function createPortalSession(): Promise<{ url: string }> {
     throw new Error('No subscription found')
   }
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: sub.stripeCustomerId,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`,
   })
@@ -71,7 +70,7 @@ export async function syncSubscription() {
     return { status: sub?.status ?? 'inactive' }
   }
 
-  const stripeSubResponse = await stripe.subscriptions.retrieve(
+  const stripeSubResponse = await getStripe().subscriptions.retrieve(
     sub.stripeSubscriptionId
   )
   const stripeSub = stripeSubResponse as any

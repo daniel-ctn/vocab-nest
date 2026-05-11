@@ -12,7 +12,13 @@ export default async function BillingPage({
 }) {
   const { success } = await searchParams
   const user = await requireUser()
-  const sub = await getSubscription(user.id)
+
+  let sub: Awaited<ReturnType<typeof getSubscription>> = null
+  try {
+    sub = await getSubscription(user.id)
+  } catch {
+    sub = null
+  }
 
   const isPro = sub?.status === 'active' || sub?.status === 'trialing'
   const periodEnd = sub?.currentPeriodEnd

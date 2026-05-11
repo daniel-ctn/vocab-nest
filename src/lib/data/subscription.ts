@@ -3,14 +3,19 @@ import { db } from '@/lib/db'
 import { subscriptions } from '@/lib/db/schema'
 
 export async function getSubscription(userId: string) {
-  const row = await db
-    .select()
-    .from(subscriptions)
-    .where(eq(subscriptions.userId, userId))
-    .limit(1)
-    .then((rows) => rows[0] ?? null)
+  try {
+    const row = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1)
+      .then((rows) => rows[0] ?? null)
 
-  return row
+    return row
+  } catch {
+    // Table may not exist yet (db:push not run)
+    return null
+  }
 }
 
 export async function isPro(userId: string): Promise<boolean> {

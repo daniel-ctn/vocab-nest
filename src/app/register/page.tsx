@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Feather, Loader2 } from 'lucide-react'
 import { signUp } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { GoogleSignInButton } from '@/components/google-sign-in'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -117,6 +118,17 @@ export default function RegisterPage() {
             Create account
           </button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-3 bg-cream text-ink-secondary">or</span>
+          </div>
+        </div>
+
+        <GoogleSignInButton />
 
         <p className="mt-6 text-sm text-ink-secondary text-center">
           Already have an account?{' '}

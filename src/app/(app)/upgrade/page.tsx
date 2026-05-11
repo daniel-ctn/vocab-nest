@@ -14,18 +14,32 @@ export default async function UpgradePage() {
     redirect('/settings/billing')
   }
 
-  const monthlyPriceId = getStripePriceId()
-  const annualPriceId = getStripeAnnualPriceId()
+  let monthlyPriceId: string | null = null
+  let annualPriceId: string | null = null
+  try {
+    monthlyPriceId = getStripePriceId()
+    annualPriceId = getStripeAnnualPriceId() ?? null
+  } catch {
+    monthlyPriceId = null
+    annualPriceId = null
+  }
 
   async function handleCheckoutMonthly() {
     'use server'
+    if (!monthlyPriceId) {
+      throw new Error('Stripe is not configured. Please contact support.')
+    }
     const { url } = await createCheckoutSession(monthlyPriceId)
     redirect(url)
   }
 
   async function handleCheckoutAnnual() {
     'use server'
-    const { url } = await createCheckoutSession(annualPriceId ?? monthlyPriceId)
+    const priceId = annualPriceId || monthlyPriceId
+    if (!priceId) {
+      throw new Error('Stripe is not configured. Please contact support.')
+    }
+    const { url } = await createCheckoutSession(priceId)
     redirect(url)
   }
 
@@ -38,6 +52,32 @@ export default async function UpgradePage() {
     'Export your data',
     'Custom daily goals',
   ]
+
+  if (!monthlyPriceId) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to dashboard
+        </Link>
+
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-accent-subtle mb-2">
+            <Zap size={24} className="text-accent" />
+          </div>
+          <h1 className="font-display text-3xl font-semibold text-ink">
+            Upgrade to Pro
+          </h1>
+          <p className="text-ink-secondary max-w-md mx-auto">
+            Pro features are coming soon. Check back later!
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">

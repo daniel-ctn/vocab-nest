@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { db } from '@/lib/db'
 import { subscriptions, user } from '@/lib/db/schema'
 
@@ -18,7 +17,9 @@ export async function POST(req: Request) {
   const payload = await req.text()
   const signature = req.headers.get('stripe-signature') ?? ''
 
-  let event: Stripe.Event
+  const stripe = getStripe()
+
+  let event: ReturnType<typeof stripe.webhooks.constructEvent>
 
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
+        const session = event.data.object as any
         if (session.mode === 'subscription' && session.customer) {
           const customerId =
             typeof session.customer === 'string'
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
             )
           }
 
-          const subscription = await stripe.subscriptions.retrieve(
+          const subscription = await getStripe().subscriptions.retrieve(
             session.subscription as string
           )
           const subData = subscription as any
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
+        const subscription = event.data.object as any
         const customerId =
           typeof subscription.customer === 'string'
             ? subscription.customer
