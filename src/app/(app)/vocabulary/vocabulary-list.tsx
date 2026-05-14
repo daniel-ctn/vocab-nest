@@ -4,21 +4,30 @@ import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Search,
-  Plus,
   Loader2,
-  Tag,
   MoreHorizontal,
-  Trash2,
   Pencil,
-  BookOpen,
+  Search,
+  Trash2,
   X,
-  Filter,
 } from 'lucide-react'
 import { deleteVocabulary, searchVocabulary } from '@/lib/actions/vocabulary'
+import { ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Marginalia } from '@/components/ui/marginalia'
+import {
+  Specimen,
+  SpecimenAside,
+  SpecimenBody,
+  SpecimenDefinition,
+  SpecimenList,
+  SpecimenTerm,
+} from '@/components/ui/specimen'
+import { toRoman } from '@/components/ui/roman'
 import type { VocabularyEntry } from '@/lib/contracts'
 
-function VocabCard({
+function EntryRow({
   entry,
   onDelete,
 }: {
@@ -26,90 +35,86 @@ function VocabCard({
   onDelete: (id: string) => void
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <div className="group relative p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors">
-      <div className="flex items-start justify-between gap-3">
-        <Link
-          href={`/vocabulary/${entry.id}`}
-          className="text-left flex-1 min-w-0"
-        >
-          <h3 className="font-display text-lg font-semibold text-ink truncate">
-            {entry.term}
-          </h3>
-          <p className="text-sm text-ink-secondary mt-1 line-clamp-2">
-            {entry.definition}
-          </p>
-        </Link>
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="p-1.5 rounded-md text-ink-tertiary hover:text-ink hover:bg-border-subtle transition-colors"
-          >
-            <MoreHorizontal size={16} />
-          </button>
-          {menuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setMenuOpen(false)}
-              />
-              <div className="absolute right-0 top-full mt-1 w-36 rounded-lg bg-surface border border-border shadow-lg z-20 overflow-hidden">
-                <Link
-                  href={`/vocabulary/${entry.id}`}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
-                >
-                  <BookOpen size={14} />
-                  View
-                </Link>
-                <Link
-                  href={`/vocabulary/${entry.id}/edit`}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-ink hover:bg-border-subtle"
-                >
-                  <Pencil size={14} />
-                  Edit
-                </Link>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false)
-                    onDelete(entry.id)
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-error hover:bg-error-subtle"
-                >
-                  <Trash2 size={14} />
-                  Delete
-                </button>
+    <div className="group relative">
+      <Link
+        href={`/vocabulary/${entry.id}`}
+        className="block transition-colors hover:[&_[data-specimen-term]]:text-accent"
+      >
+        <div className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline gap-3">
+              <SpecimenTerm>{entry.term}</SpecimenTerm>
+              {entry.partOfSpeech && (
+                <Marginalia className="shrink-0">
+                  {entry.partOfSpeech}.
+                </Marginalia>
+              )}
+            </div>
+            <SpecimenDefinition className="mt-1 line-clamp-2">
+              {entry.definition}
+            </SpecimenDefinition>
+            {entry.tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                {entry.tags.slice(0, 4).map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] uppercase tracking-[0.14em] font-semibold text-ink-tertiary"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
-            </>
+            )}
+          </div>
+          {entry.language && (
+            <SpecimenAside>
+              <Caps className="text-ink-tertiary">{entry.language}</Caps>
+            </SpecimenAside>
           )}
         </div>
-      </div>
+      </Link>
 
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        {entry.partOfSpeech && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-border-subtle text-xs font-medium text-ink-secondary">
-            {entry.partOfSpeech}
-          </span>
-        )}
-        {entry.language && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-border-subtle text-xs font-medium text-ink-secondary uppercase">
-            {entry.language}
-          </span>
-        )}
-        {entry.tags.slice(0, 3).map((tag) => (
-          <Link
-            key={tag}
-            href={`/vocabulary?tag=${encodeURIComponent(tag)}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent-subtle text-xs font-medium text-accent hover:bg-accent/10 transition-colors"
-          >
-            <Tag size={10} />
-            {tag}
-          </Link>
-        ))}
-      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault()
+          setMenuOpen((v) => !v)
+        }}
+        className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-sm text-ink-tertiary opacity-0 transition-opacity hover:bg-border-subtle hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
+        aria-label="More"
+      >
+        <MoreHorizontal size={14} />
+      </button>
+      {menuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute right-0 top-8 z-40 w-40 border border-rule bg-cream py-1 shadow-lg">
+            <Link
+              href={`/vocabulary/${entry.id}/edit`}
+              className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Pencil size={13} />
+              Edit
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false)
+                onDelete(entry.id)
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-error hover:bg-error-subtle"
+            >
+              <Trash2 size={13} />
+              Delete
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -167,109 +172,120 @@ export function VocabularyList({
   const displayed = searchResults ?? entries
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
-            Vocabulary
-          </h1>
-          <p className="text-ink-secondary mt-1">
-            {entries.length} word{entries.length !== 1 ? 's' : ''} collected
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isPro && (
-            <Link
-              href="/upgrade"
-              className="text-xs text-accent font-medium hover:underline"
-            >
-              Upgrade
-            </Link>
-          )}
-          <Link
-            href={atLimit ? '/upgrade' : '/vocabulary/new'}
-            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              atLimit
-                ? 'bg-border-subtle text-ink-secondary'
-                : 'bg-accent text-white hover:bg-accent-hover'
-            }`}
-          >
-            <Plus size={16} />
-            {atLimit ? 'At limit' : 'Add word'}
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-10">
+      <Chapter
+        eyebrow={`Part ${toRoman(2)}`}
+        title="Vocabulary"
+        subtitle={`${entries.length} word${entries.length !== 1 ? 's' : ''} collected.`}
+        aside={
+          <div className="flex items-center gap-3">
+            {!isPro && (
+              <Link
+                href="/upgrade"
+                className="text-[12px] uppercase tracking-[0.14em] font-semibold text-ink-secondary hover:text-ink"
+              >
+                Upgrade
+              </Link>
+            )}
+            {atLimit ? (
+              <ButtonLink href="/upgrade" variant="outline">
+                At limit
+              </ButtonLink>
+            ) : (
+              <ButtonLink href="/vocabulary/new" variant="primary">
+                Add a word
+              </ButtonLink>
+            )}
+          </div>
+        }
+      />
 
+      {/* Search */}
       <div className="relative">
         <Search
-          size={16}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-tertiary"
+          size={14}
+          className="absolute bottom-2.5 left-0 text-ink-tertiary"
         />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search words, definitions, or tags..."
-          className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          placeholder="Search words, definitions, tags"
+          className="w-full border-0 border-b border-rule bg-transparent py-2 pl-6 pr-8 text-[15px] text-ink placeholder:font-display placeholder:italic placeholder:text-ink-tertiary focus:border-ink focus:outline-none transition-colors"
         />
         {query && !searching && (
           <button
+            type="button"
             onClick={() => setQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-tertiary hover:text-ink"
+            className="absolute bottom-2 right-0 text-ink-tertiary hover:text-ink"
+            aria-label="Clear"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         )}
         {searching && (
           <Loader2
-            size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-tertiary animate-spin"
+            size={14}
+            className="absolute bottom-2 right-0 animate-spin text-ink-tertiary"
           />
         )}
       </div>
 
       {activeTag && (
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-subtle text-sm text-accent font-medium">
-            <Filter size={12} />
-            {activeTag}
-          </div>
+        <Marginalia>
+          Filtered by tag{' '}
+          <span className="font-semibold text-ink not-italic">{activeTag}</span>
+          .{' '}
           <Link
             href="/vocabulary"
-            className="text-sm text-ink-secondary hover:text-ink transition-colors"
+            className="not-italic text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px]"
           >
-            Clear filter
+            Clear
           </Link>
-        </div>
+        </Marginalia>
       )}
 
       {searchResults && (
-        <p className="text-sm text-ink-secondary">
-          {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;
-        </p>
+        <Marginalia>
+          {searchResults.length} result
+          {searchResults.length !== 1 ? 's' : ''} for &ldquo;{query}&rdquo;.
+        </Marginalia>
+      )}
+
+      {atLimit && (
+        <Marginalia className="text-accent">
+          You&apos;ve reached the free plan limit. {' '}
+          <Link
+            href="/upgrade"
+            className="not-italic font-semibold text-accent underline decoration-accent decoration-[1.5px] underline-offset-[5px]"
+          >
+            Upgrade to Pro
+          </Link>{' '}
+          for unlimited vocabulary.
+        </Marginalia>
       )}
 
       {displayed.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-ink-secondary">
-            {query ? 'No matches found.' : 'No words yet.'}
+        <div className="py-16 text-center">
+          <div className="font-display text-5xl text-ink-tertiary">—</div>
+          <p className="mt-3 font-display italic text-[15px] text-ink-tertiary">
+            {query ? 'No matches.' : 'No words yet.'}
           </p>
           {!query && (
             <Link
               href="/vocabulary/new"
-              className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-accent hover:underline"
+              className="mt-6 inline-block text-[13px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
             >
-              <Plus size={14} />
-              Add your first word
+              Add your first word →
             </Link>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <SpecimenList>
           {displayed.map((entry) => (
-            <VocabCard key={entry.id} entry={entry} onDelete={handleDelete} />
+            <EntryRow key={entry.id} entry={entry} onDelete={handleDelete} />
           ))}
-        </div>
+        </SpecimenList>
       )}
     </div>
   )

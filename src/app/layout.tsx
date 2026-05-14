@@ -22,8 +22,12 @@ export const metadata: Metadata = {
 
 const themeScript = `
   (function(){
-    const t = localStorage.getItem('vn-theme') || 'light'
-    if (t === 'dark') document.documentElement.classList.add('dark')
+    try {
+      var saved = localStorage.getItem('vn-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var dark = saved ? saved === 'dark' : prefersDark;
+      if (dark) document.documentElement.classList.add('dark');
+    } catch (e) {}
   })()
 `
 

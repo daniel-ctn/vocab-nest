@@ -2,8 +2,9 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { deleteGroup } from '@/lib/actions/groups'
+import { Button } from '@/components/ui/button'
 
 export function DeleteGroupButton({ id }: { id: string }) {
   const router = useRouter()
@@ -22,13 +23,9 @@ export function DeleteGroupButton({ id }: { id: string }) {
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={isPending}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-error-subtle text-error text-sm font-medium hover:bg-error/10 transition-colors disabled:opacity-60"
-    >
-      <Trash2 size={14} />
-      Delete group
-    </button>
+    <Button onClick={handleClick} disabled={isPending} variant="danger">
+      {isPending ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+      Delete
+    </Button>
   )
 }

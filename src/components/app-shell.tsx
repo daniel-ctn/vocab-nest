@@ -1,106 +1,283 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard,
-  BookOpen,
-  FolderOpen,
-  BrainCircuit,
-  BarChart3,
-  Settings,
-  LogOut,
-  Feather,
-  Shield,
-} from 'lucide-react'
+import { Feather, LogOut, MoreHorizontal, Settings, Shield } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { PageProgress } from '@/components/page-progress'
+import { Caps } from '@/components/ui/caps'
+import { Rule } from '@/components/ui/rule'
+import { toRoman } from '@/components/ui/roman'
 import { cn } from '@/lib/cn'
 
-const baseNavItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/vocabulary', label: 'Vocabulary', icon: BookOpen },
-  { href: '/groups', label: 'Groups', icon: FolderOpen },
-  { href: '/practice', label: 'Practice', icon: BrainCircuit },
-  { href: '/stats', label: 'Stats', icon: BarChart3 },
-  { href: '/settings/billing', label: 'Settings', icon: Settings },
+type NavItem = {
+  href: string
+  label: string
+  /** Show in the bottom mobile bar */
+  mobile?: boolean
+}
+
+const primaryNav: NavItem[] = [
+  { href: '/dashboard', label: 'Dashboard', mobile: true },
+  { href: '/vocabulary', label: 'Vocabulary', mobile: true },
+  { href: '/groups', label: 'Groups' },
+  { href: '/practice', label: 'Practice', mobile: true },
+  { href: '/stats', label: 'Stats', mobile: true },
 ]
+
+function Wordmark({ size = 'md' }: { size?: 'sm' | 'md' }) {
+  const titleSize = size === 'sm' ? 'text-[13px]' : 'text-[14px]'
+  return (
+    <Link
+      href="/dashboard"
+      className="group inline-flex items-center gap-2.5"
+      aria-label="Vocab Nest — Dashboard"
+    >
+      <span className="inline-flex h-7 w-7 items-center justify-center border border-ink/80 text-ink transition-colors group-hover:bg-ink group-hover:text-cream">
+        <Feather size={14} strokeWidth={2} />
+      </span>
+      <span
+        className={cn(
+          'font-semibold uppercase tracking-[0.22em] text-ink',
+          titleSize
+        )}
+      >
+        Vocab&nbsp;Nest
+      </span>
+    </Link>
+  )
+}
+
+function isActive(pathname: string, href: string) {
+  if (href === '/dashboard') return pathname === '/dashboard'
+  return pathname === href || pathname.startsWith(href + '/')
+}
 
 export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
   const pathname = usePathname()
-  const navItems = isAdmin
-    ? [...baseNavItems, { href: '/admin', label: 'Admin', icon: Shield }]
-    : baseNavItems
-
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-dvh sticky top-0 border-r border-border bg-surface">
-      <div className="flex items-center gap-3 px-6 h-16">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent text-white">
-          <Feather size={18} strokeWidth={2.5} />
-        </div>
-        <span className="font-display text-lg font-semibold text-ink tracking-tight">
-          Vocab Nest
-        </span>
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-rule bg-cream lg:flex">
+      <div className="flex h-16 items-center px-6">
+        <Wordmark />
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1">
-        {navItems.map((item) => {
-          const active = pathname.startsWith(item.href)
-          return (
+      <div className="px-6">
+        <Rule />
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <Caps as="div" className="mb-4 text-ink-tertiary">
+          Contents
+        </Caps>
+        <nav className="space-y-1">
+          {primaryNav.map((item, i) => {
+            const active = isActive(pathname, item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'relative grid grid-cols-[28px_1fr] items-baseline gap-2 py-1.5 text-[14px] transition-colors',
+                  active
+                    ? 'text-ink'
+                    : 'text-ink-secondary hover:text-ink'
+                )}
+              >
+                {active && (
+                  <span
+                    aria-hidden
+                    className="absolute -left-6 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-accent"
+                  />
+                )}
+                <span
+                  className={cn(
+                    'text-right font-display text-[12px] italic',
+                    active ? 'text-accent' : 'text-ink-tertiary'
+                  )}
+                >
+                  {toRoman(i + 1)}.
+                </span>
+                <span className={cn('font-medium', active && 'font-semibold')}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+          {isAdmin && (
             <Link
-              key={item.href}
-              href={item.href}
+              href="/admin"
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                active
-                  ? 'bg-accent-subtle text-accent'
-                  : 'text-ink-secondary hover:bg-border-subtle hover:text-ink'
+                'relative grid grid-cols-[28px_1fr] items-baseline gap-2 py-1.5 text-[14px] transition-colors',
+                isActive(pathname, '/admin')
+                  ? 'text-ink'
+                  : 'text-ink-secondary hover:text-ink'
               )}
             >
-              <item.icon size={18} />
-              {item.label}
+              {isActive(pathname, '/admin') && (
+                <span
+                  aria-hidden
+                  className="absolute -left-6 top-1/2 h-4 w-[2px] -translate-y-1/2 bg-accent"
+                />
+              )}
+              <span className="text-right font-display text-[12px] italic text-ink-tertiary">
+                <Shield size={12} className="inline" />
+              </span>
+              <span className="font-medium">Admin</span>
             </Link>
-          )
-        })}
-      </nav>
+          )}
+        </nav>
 
-      <div className="px-4 py-4 border-t border-border space-y-1">
-        <ThemeToggle className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
-        <button
-          onClick={() => signOut()}
-          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors"
-        >
-          <LogOut size={18} />
-          Sign out
-        </button>
+        <div className="mt-10">
+          <Caps as="div" className="mb-3 text-ink-tertiary">
+            Account
+          </Caps>
+          <Link
+            href="/settings/billing"
+            className={cn(
+              'block py-1.5 text-[14px] transition-colors',
+              isActive(pathname, '/settings')
+                ? 'text-ink'
+                : 'text-ink-secondary hover:text-ink'
+            )}
+          >
+            Billing &amp; plan
+          </Link>
+        </div>
+      </div>
+
+      <div className="border-t border-rule px-6 py-4">
+        <div className="flex items-center justify-between">
+          <ThemeToggle className="-mx-2 inline-flex h-9 items-center gap-2 rounded-sm px-2 text-[13px] text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink" />
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="inline-flex h-9 items-center gap-1.5 rounded-sm px-2 text-[13px] text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink"
+            aria-label="Sign out"
+          >
+            <LogOut size={14} />
+            <span>Sign out</span>
+          </button>
+        </div>
       </div>
     </aside>
   )
 }
 
-export function MobileNav({ isAdmin }: { isAdmin?: boolean }) {
-  const pathname = usePathname()
-  const navItems = isAdmin
-    ? [...baseNavItems, { href: '/admin', label: 'Admin', icon: Shield }]
-    : baseNavItems
-
+function ProfileMenu({ isAdmin }: { isAdmin?: boolean }) {
+  const [open, setOpen] = useState(false)
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-surface border-t border-border">
-      <div className="flex items-center justify-around h-16">
-        {navItems.map((item) => {
-          const active = pathname.startsWith(item.href)
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink"
+        aria-label="More"
+      >
+        <MoreHorizontal size={18} />
+      </button>
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute right-0 top-full z-40 mt-1 w-44 border border-rule bg-cream py-1 shadow-lg">
+            <Link
+              href="/groups"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
+            >
+              Groups
+            </Link>
+            <Link
+              href="/settings/billing"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
+            >
+              <Settings size={13} />
+              Billing
+            </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
+              >
+                <Shield size={13} />
+                Admin
+              </Link>
+            )}
+            <div className="my-1 border-t border-rule" />
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-ink hover:bg-border-subtle"
+            >
+              <LogOut size={13} />
+              Sign out
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function MobileTopBar({ isAdmin }: { isAdmin?: boolean }) {
+  return (
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-rule bg-cream px-4 py-3 lg:hidden">
+      <Wordmark size="sm" />
+      <div className="flex items-center gap-1">
+        <ThemeToggle className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink" />
+        <ProfileMenu isAdmin={isAdmin} />
+      </div>
+    </header>
+  )
+}
+
+function MobileNav() {
+  const pathname = usePathname()
+  const items = primaryNav.filter((i) => i.mobile)
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-rule bg-cream lg:hidden"
+      aria-label="Primary"
+    >
+      <div className="grid grid-cols-4">
+        {items.map((item, i) => {
+          const active = isActive(pathname, item.href)
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center gap-1 w-full h-full text-xs font-medium transition-colors',
-                active ? 'text-accent' : 'text-ink-tertiary'
-              )}
+              className="relative flex flex-col items-center justify-center gap-1 py-2.5"
             >
-              <item.icon size={20} />
-              <span>{item.label}</span>
+              {active && (
+                <span
+                  aria-hidden
+                  className="absolute left-1/2 top-0 h-[2px] w-8 -translate-x-1/2 bg-accent"
+                />
+              )}
+              <span
+                className={cn(
+                  'font-display text-[11px] italic',
+                  active ? 'text-accent' : 'text-ink-tertiary'
+                )}
+              >
+                {toRoman(i + 1)}
+              </span>
+              <span
+                className={cn(
+                  'text-[11px] uppercase tracking-[0.12em]',
+                  active
+                    ? 'font-semibold text-ink'
+                    : 'font-medium text-ink-secondary'
+                )}
+              >
+                {item.label}
+              </span>
             </Link>
           )
         })}
@@ -120,32 +297,13 @@ export function AppShell({
     <div className="flex min-h-dvh bg-cream">
       <PageProgress />
       <Sidebar isAdmin={isAdmin} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-surface sticky top-0 z-40">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent text-white">
-              <Feather size={18} strokeWidth={2.5} />
-            </div>
-            <span className="font-display text-lg font-semibold text-ink tracking-tight">
-              Vocab Nest
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <ThemeToggle className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
-            <button
-              onClick={() => signOut()}
-              className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors"
-              aria-label="Sign out"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 max-w-5xl mx-auto w-full">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <MobileTopBar isAdmin={isAdmin} />
+        <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-28 pt-8 sm:px-8 sm:pt-10 lg:px-12 lg:pb-12">
           {children}
         </main>
       </div>
-      <MobileNav isAdmin={isAdmin} />
+      <MobileNav />
     </div>
   )
 }

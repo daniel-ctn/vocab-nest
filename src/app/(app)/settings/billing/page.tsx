@@ -1,12 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import {
-  ArrowLeft,
-  CreditCard,
-  Zap,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react'
+import { ArrowLeft, CreditCard } from 'lucide-react'
 import { requireUser } from '@/lib/session'
 import { getSubscription } from '@/lib/data/subscription'
 import {
@@ -14,6 +8,11 @@ import {
   syncCheckoutSession,
   syncSubscription,
 } from '@/lib/actions/billing'
+import { Button, ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
 
 export default async function BillingPage({
   searchParams,
@@ -40,7 +39,11 @@ export default async function BillingPage({
 
   const isPro = sub?.status === 'active' || sub?.status === 'trialing'
   const periodEnd = sub?.currentPeriodEnd
-    ? new Date(sub.currentPeriodEnd).toLocaleDateString()
+    ? new Date(sub.currentPeriodEnd).toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
     : null
 
   async function handleManage() {
@@ -55,123 +58,99 @@ export default async function BillingPage({
   }
 
   return (
-    <div className="max-w-xl mx-auto space-y-8">
+    <div className="space-y-10">
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink transition-colors"
+        className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] font-semibold text-ink-secondary transition-colors hover:text-ink"
       >
-        <ArrowLeft size={16} />
-        Back to dashboard
+        <ArrowLeft size={14} />
+        Dashboard
       </Link>
 
-      <div>
-        <h1 className="font-display text-3xl font-semibold text-ink">
-          Billing
-        </h1>
-        <p className="text-ink-secondary mt-1">
-          Manage your subscription and plan.
-        </p>
-      </div>
+      <Chapter
+        eyebrow="Account"
+        title="Billing"
+        subtitle="Manage your subscription and plan."
+      />
 
       {success && (
-        <div
-          className={`p-4 rounded-xl text-sm flex items-center gap-2 ${
-            isPro
-              ? 'bg-success-subtle text-success'
-              : 'bg-accent-subtle text-accent'
-          }`}
+        <Marginalia
+          className={isPro ? 'text-success' : 'text-accent'}
         >
-          {isPro ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
           {isPro
-            ? 'Welcome to Pro! Your subscription is now active.'
-            : 'Payment completed. Your plan will update after Stripe confirms the subscription.'}
-        </div>
+            ? 'Welcome to Pro. Your subscription is active.'
+            : 'Payment completed. Your plan will update once Stripe confirms.'}
+        </Marginalia>
       )}
 
-      <div className="p-6 rounded-2xl bg-surface border border-border space-y-5">
-        <div className="flex items-center gap-3">
-          <div
-            className={`flex items-center justify-center w-10 h-10 rounded-lg ${
-              isPro
-                ? 'bg-accent text-white'
-                : 'bg-border-subtle text-ink-secondary'
-            }`}
-          >
-            <Zap size={18} />
-          </div>
+      <section className="space-y-5">
+        <Caps as="div">Current plan</Caps>
+        <Rule />
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div>
-            <div className="font-display text-lg font-semibold text-ink">
-              {isPro ? 'Pro Plan' : 'Free Plan'}
+            <div className="font-display text-4xl font-semibold leading-tight text-ink">
+              {isPro ? 'Pro' : 'Free'}
             </div>
-            <div className="text-sm text-ink-secondary">
+            <Marginalia>
               {isPro
                 ? periodEnd
                   ? `Renews on ${periodEnd}`
                   : 'Active subscription'
                 : 'Limited to 100 words and 3 groups'}
-            </div>
+            </Marginalia>
           </div>
+          {!isPro && (
+            <ButtonLink href="/upgrade" variant="primary" size="lg">
+              Upgrade to Pro
+            </ButtonLink>
+          )}
         </div>
 
         {isPro ? (
-          <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             <form action={handleManage}>
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-              >
-                <CreditCard size={16} />
+              <Button type="submit" variant="primary">
+                <CreditCard size={13} />
                 Manage subscription
-              </button>
+              </Button>
             </form>
             <form action={handleSync}>
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-ink-secondary hover:bg-border-subtle transition-colors"
-              >
+              <Button type="submit" variant="ghost">
                 Sync status
-              </button>
+              </Button>
             </form>
           </div>
         ) : (
-          <div className="space-y-3">
-            <Link
-              href="/upgrade"
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-            >
-              <Zap size={16} />
-              Upgrade to Pro
-            </Link>
-            <div className="flex items-start gap-2 text-xs text-ink-secondary">
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              <span>
-                Free accounts are limited to 100 vocabulary words and 3 groups.
-                Some features like bulk import, stats, and practice by group are
-                Pro-only.
-              </span>
-            </div>
-          </div>
+          <Marginalia>
+            Free accounts are limited to 100 vocabulary words and 3 groups.
+            Bulk import, stats, and practice-by-group are Pro-only.
+          </Marginalia>
         )}
-      </div>
+      </section>
 
       {isPro && sub && (
-        <div className="p-5 rounded-xl bg-cream border border-border space-y-3">
-          <h2 className="font-display text-base font-semibold text-ink">
-            Subscription details
-          </h2>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <section className="space-y-4">
+          <Caps as="div">Details</Caps>
+          <Rule />
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-[14px]">
             <div>
-              <div className="text-ink-secondary">Status</div>
-              <div className="text-ink font-medium capitalize">
+              <Caps as="div" className="mb-1 text-ink-tertiary">
+                Status
+              </Caps>
+              <dd className="font-display text-[18px] font-semibold capitalize text-ink">
                 {sub.status}
-              </div>
+              </dd>
             </div>
             <div>
-              <div className="text-ink-secondary">Current period ends</div>
-              <div className="text-ink font-medium">{periodEnd ?? '—'}</div>
+              <Caps as="div" className="mb-1 text-ink-tertiary">
+                Current period ends
+              </Caps>
+              <dd className="font-display text-[18px] font-semibold text-ink">
+                {periodEnd ?? '—'}
+              </dd>
             </div>
-          </div>
-        </div>
+          </dl>
+        </section>
       )}
     </div>
   )

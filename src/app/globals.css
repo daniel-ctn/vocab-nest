@@ -1,44 +1,67 @@
 @import 'tailwindcss';
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Vocab Nest — Bookbinder's Workshop
+ *
+ * Paper + ink. Terracotta is strictly stateful (due / active / required).
+ * Hairline rules replace card borders. Fraunces gets lining tabular numerals.
+ * Dark mode is warm charcoal on ivory, not cold black.
+ * ─────────────────────────────────────────────────────────────────────── */
+
 @theme {
   --font-display: 'Fraunces', serif;
   --font-sans: 'Work Sans', sans-serif;
 
+  /* Paper & ink */
   --color-cream: #fdfbf7;
   --color-surface: #ffffff;
   --color-ink: #1a1a1a;
   --color-ink-secondary: #6b6b6b;
   --color-ink-tertiary: #a3a3a3;
+
+  /* Accent — terracotta. Reserved for state (due / active / now). */
   --color-accent: #d4613c;
   --color-accent-hover: #b8502e;
   --color-accent-subtle: #fdf2ee;
+
+  /* Semantic state */
   --color-success: #2d6a4f;
   --color-success-subtle: #eaf4ef;
   --color-warning: #d4a03c;
   --color-warning-subtle: #fdf8ee;
   --color-error: #c0392b;
   --color-error-subtle: #fdecea;
+
+  /* Structure */
   --color-border: #e8e4de;
   --color-border-subtle: #f2f0ec;
+  --color-rule: #d8d4cc;
+
+  /* Motion */
+  --ease-paper: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .dark {
-  --color-cream: #121212;
-  --color-surface: #1e1e1e;
-  --color-ink: #f0f0f0;
-  --color-ink-secondary: #a0a0a0;
-  --color-ink-tertiary: #6b6b6b;
+  --color-cream: #1a1612;
+  --color-surface: #221d18;
+  --color-ink: #f0ebe1;
+  --color-ink-secondary: #a8a098;
+  --color-ink-tertiary: #6b6359;
+
   --color-accent: #e07a5f;
   --color-accent-hover: #c96a4e;
   --color-accent-subtle: #3d2520;
+
   --color-success: #3d8b6a;
   --color-success-subtle: #1a3025;
   --color-warning: #e0b050;
   --color-warning-subtle: #3d3020;
   --color-error: #e74c3c;
   --color-error-subtle: #3d1f1b;
-  --color-border: #333333;
-  --color-border-subtle: #2a2a2a;
+
+  --color-border: #3a342d;
+  --color-border-subtle: #2a251f;
+  --color-rule: #4a4338;
 }
 
 @layer base {
@@ -48,9 +71,128 @@
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     min-height: 100dvh;
+  }
+
+  /* Fraunces shines with lining + tabular numerals and ss01 (alt g) */
+  .font-display {
+    font-feature-settings: 'lnum', 'tnum', 'ss01';
+  }
+
+  /* Hairline default selection — paper, not neon */
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 25%, transparent);
+    color: var(--color-ink);
+  }
+}
+
+/* ──── Keyframes ──── */
+@keyframes vn-rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes vn-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vn-stroke-draw {
+  from {
+    stroke-dashoffset: var(--stroke-length, 32);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes vn-press {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ──── Custom utilities ──── */
+@utility animate-rule-draw {
+  animation: vn-rule-draw 600ms var(--ease-paper) both;
+  transform-origin: left;
+}
+
+@utility animate-fade-up {
+  animation: vn-fade-up 320ms var(--ease-paper) both;
+}
+
+@utility animate-stroke-draw {
+  animation: vn-stroke-draw 320ms var(--ease-paper) both;
+}
+
+@utility perspective-1200 {
+  perspective: 1200px;
+}
+
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+
+@utility backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@utility rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+@utility rotate-y-0 {
+  transform: rotateY(0deg);
+}
+
+/* Hairline rule that fades at both edges — chapter rule */
+@utility rule-fade {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--color-rule) 6%,
+    var(--color-rule) 94%,
+    transparent 100%
+  );
+}
+
+/* Tally stroke (animated draw-on) */
+.vn-tally-stroke {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: vn-stroke-draw 280ms var(--ease-paper) both;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

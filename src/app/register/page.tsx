@@ -3,10 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Feather, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { signUp } from '@/lib/auth-client'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { AuthShell } from '@/components/auth-shell'
 import { GoogleSignInButton } from '@/components/google-sign-in'
+import { Button } from '@/components/ui/button'
+import { Field, Input, Label } from '@/components/ui/input'
+import { Marginalia } from '@/components/ui/marginalia'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -40,106 +43,84 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-cream flex flex-col items-center justify-center px-6 relative">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
+    <AuthShell
+      eyebrow="Start your nest"
+      title="Begin a vocabulary."
+      subtitle="A small page today; a thicker book by year's end."
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Field>
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Jane Doe"
+          />
+        </Field>
+        <Field>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        </Field>
+        <Field>
+          <Label htmlFor="password" hint="8+ characters">
+            Password
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+          />
+        </Field>
+
+        {error && (
+          <Marginalia className="text-error">{error}</Marginalia>
+        )}
+
+        <Button
+          type="submit"
+          disabled={submitting}
+          variant="primary"
+          size="lg"
+          className="w-full"
+        >
+          {submitting && <Loader2 size={14} className="animate-spin" />}
+          Create account
+        </Button>
+      </form>
+
+      <div className="flex items-center gap-4">
+        <div className="h-px flex-1 bg-rule" />
+        <span className="text-[11px] uppercase tracking-[0.14em] font-semibold text-ink-tertiary">
+          or
+        </span>
+        <div className="h-px flex-1 bg-rule" />
       </div>
-      <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2.5 mb-10">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent text-white">
-            <Feather size={18} strokeWidth={2.5} />
-          </div>
-          <span className="font-display text-xl font-semibold text-ink tracking-tight">
-            Vocab Nest
-          </span>
-        </div>
 
-        <h1 className="font-display text-2xl font-semibold text-ink text-center mb-2">
-          Create your account
-        </h1>
-        <p className="text-sm text-ink-secondary text-center mb-8">
-          Start building your vocabulary today
-        </p>
+      <GoogleSignInButton />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Name
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-              placeholder="Jane Doe"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-              placeholder="At least 8 characters"
-            />
-          </div>
-
-          {error && (
-            <div className="px-3.5 py-2.5 rounded-lg bg-error-subtle text-error text-sm">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-60"
-          >
-            {submitting && <Loader2 size={16} className="animate-spin" />}
-            Create account
-          </button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="px-3 bg-cream text-ink-secondary">or</span>
-          </div>
-        </div>
-
-        <GoogleSignInButton />
-
-        <p className="mt-6 text-sm text-ink-secondary text-center">
-          Already have an account?{' '}
-          <Link
-            href="/login"
-            className="font-medium text-accent hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
+      <p className="text-center text-[13px] text-ink-secondary">
+        Already have a book?{' '}
+        <Link
+          href="/login"
+          className="text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
+        >
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   )
 }

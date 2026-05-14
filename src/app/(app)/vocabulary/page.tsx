@@ -23,24 +23,14 @@ export default async function VocabularyPage({
   const atLimit = !pro && stats.totalVocabulary >= FREE_WORD_LIMIT
 
   return (
-    <div className="space-y-6">
-      {pro && <BulkImport />}
-      {atLimit && (
-        <div className="p-4 rounded-xl bg-accent-subtle border border-accent/20 text-sm text-accent">
-          You&apos;ve reached the free plan limit of {FREE_WORD_LIMIT} words.
-          {' '}
-          <a href="/upgrade" className="font-medium underline">
-            Upgrade to Pro
-          </a>{' '}
-          to add unlimited vocabulary.
-        </div>
-      )}
+    <div className="space-y-10">
       <VocabularyList
         entries={entries}
         activeTag={tag}
         atLimit={atLimit}
         isPro={pro}
       />
+      {pro && <BulkImport />}
     </div>
   )
 }

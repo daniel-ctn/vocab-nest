@@ -6,11 +6,7 @@ import { signIn } from '@/lib/auth-client'
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1Z"
         fill="#4285F4"
@@ -48,14 +44,15 @@ export function GoogleSignInButton() {
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={loading}
-      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-surface border border-border text-sm font-medium text-ink hover:bg-border-subtle transition-colors disabled:opacity-60"
+      className="inline-flex w-full items-center justify-center gap-2 rounded-sm border border-ink/70 px-4 py-2 text-[13px] font-medium text-ink transition-colors hover:bg-ink hover:text-cream hover:[&_svg]:invert-0 disabled:opacity-60"
     >
       {loading ? (
-        <Loader2 size={16} className="animate-spin" />
+        <Loader2 size={14} className="animate-spin" />
       ) : (
-        <GoogleIcon className="w-4 h-4" />
+        <GoogleIcon className="h-4 w-4" />
       )}
       Continue with Google
     </button>

@@ -1,68 +1,84 @@
 'use client'
 
 import Link from 'next/link'
-import { Feather, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
+import { Wordmark } from '@/components/ui/wordmark'
 
 export default function LandingPageClient() {
   return (
-    <div className="min-h-dvh bg-cream flex flex-col">
-      <header className="flex items-center justify-between px-6 sm:px-10 h-16">
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent text-white">
-            <Feather size={18} strokeWidth={2.5} />
-          </div>
-          <span className="font-display text-lg font-semibold text-ink tracking-tight">
-            Vocab Nest
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ThemeToggle className="p-2 rounded-lg text-ink-secondary hover:bg-border-subtle hover:text-ink transition-colors" />
+    <div className="flex min-h-dvh flex-col bg-cream">
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6 sm:px-10">
+        <Wordmark size="md" />
+        <div className="flex items-center gap-5">
+          <ThemeToggle className="inline-flex h-9 items-center gap-1.5 rounded-sm px-2 text-[13px] text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink" />
           <Link
             href="/login"
-            className="text-sm font-medium text-ink-secondary hover:text-ink transition-colors"
+            className="text-[13px] text-ink-secondary transition-colors hover:text-ink"
           >
             Sign in
           </Link>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-          >
+          <ButtonLink href="/register" variant="primary" size="md">
             Get started
-            <ArrowRight size={14} />
-          </Link>
+            <ArrowRight size={13} />
+          </ButtonLink>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-ink leading-[1.15] max-w-3xl">
-          Build your vocabulary,
-          <br />
-          <span className="text-accent">one word at a time.</span>
-        </h1>
-        <p className="mt-6 text-lg text-ink-secondary max-w-xl leading-relaxed">
-          A calm, focused space to collect words, organize them into groups, and
-          practice daily to build a lasting habit.
-        </p>
-        <div className="mt-10 flex items-center gap-4">
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white text-base font-medium hover:bg-accent-hover transition-colors shadow-sm"
-          >
-            Start learning
-            <ArrowRight size={16} />
-          </Link>
-          <Link
-            href="/login"
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-surface border border-border text-ink text-base font-medium hover:bg-border-subtle transition-colors"
-          >
-            Sign in
-          </Link>
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-16 sm:px-10">
+        <div className="space-y-10">
+          <Caps as="div">A vocabulary keeper, est. 2026</Caps>
+          <h1 className="font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-ink sm:text-[68px] lg:text-[84px]">
+            Build your vocabulary,
+            <br />
+            <span className="italic">one word at a time.</span>
+          </h1>
+          <Rule animate />
+          <p className="max-w-xl font-display text-[19px] italic leading-relaxed text-ink-secondary">
+            A calm, deliberate space to collect words, organise them into
+            groups, and practise daily — kept like a commonplace book, not a
+            feed.
+          </p>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <ButtonLink href="/register" variant="primary" size="lg">
+              Start your nest
+              <ArrowRight size={14} />
+            </ButtonLink>
+            <Link
+              href="/login"
+              className="text-[14px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[6px] hover:decoration-accent-hover"
+            >
+              I already have an account
+            </Link>
+          </div>
+        </div>
+
+        {/* Specimen — show, don't tell */}
+        <div className="mt-20 max-w-2xl">
+          <Caps as="div" className="mb-4">
+            From the workshop
+          </Caps>
+          <Rule />
+          <div className="mt-6 grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-1">
+            <Marginalia>n.</Marginalia>
+            <h2 className="font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+              serendipity
+            </h2>
+            <div />
+            <p className="font-display italic text-[18px] leading-snug text-ink-secondary sm:text-[20px]">
+              the occurrence of events by chance in a happy way.
+            </p>
+          </div>
         </div>
       </main>
 
-      <footer className="py-6 text-center text-sm text-ink-tertiary">
-        &copy; {new Date().getFullYear()} Vocab Nest
+      <footer className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8 sm:px-10">
+        <Marginalia>© {new Date().getFullYear()} Vocab Nest</Marginalia>
+        <Marginalia>Made for the patient</Marginalia>
       </footer>
     </div>
   )

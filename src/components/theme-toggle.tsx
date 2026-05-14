@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 
 export function ThemeToggle({ className }: { className?: string }) {
   const [isDark, setIsDark] = useState(false)
@@ -13,13 +13,8 @@ export function ThemeToggle({ className }: { className?: string }) {
   function toggle() {
     const next = !isDark
     setIsDark(next)
-    if (next) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('vn-theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('vn-theme', 'light')
-    }
+    document.documentElement.classList.toggle('dark', next)
+    localStorage.setItem('vn-theme', next ? 'dark' : 'light')
   }
 
   return (
@@ -27,8 +22,10 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       className={className}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      type="button"
     >
-      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      <span className="hidden sm:inline">{isDark ? 'Day' : 'Night'}</span>
     </button>
   )
 }

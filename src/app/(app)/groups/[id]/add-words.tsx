@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Search, Loader2, X } from 'lucide-react'
+import { Check, Loader2, Plus, Search, X } from 'lucide-react'
 import { addVocabularyToGroup } from '@/lib/actions/groups'
+import { Button } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
 import type { VocabularyEntry } from '@/lib/contracts'
 
 export function AddWordsToGroup({
@@ -40,83 +44,77 @@ export function AddWordsToGroup({
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-subtle text-accent text-sm font-medium hover:bg-accent/10 transition-colors"
-      >
-        <Plus size={16} />
+      <Button onClick={() => setOpen(true)} variant="outline" size="sm">
+        <Plus size={13} />
         Add words
-      </button>
+      </Button>
     )
   }
 
   return (
-    <div className="p-4 rounded-xl bg-surface border border-border space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-medium text-ink">Add words to this group</h3>
+    <section className="space-y-4">
+      <div className="flex items-baseline justify-between">
+        <Caps as="div">Add words to this group</Caps>
         <button
+          type="button"
           onClick={() => setOpen(false)}
-          className="p-1 rounded-md text-ink-tertiary hover:text-ink hover:bg-border-subtle transition-colors"
+          className="text-ink-tertiary hover:text-ink"
+          aria-label="Close"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
       </div>
+      <Rule />
 
       <div className="relative">
-        <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-tertiary"
-        />
+        <Search size={14} className="absolute bottom-2.5 left-0 text-ink-tertiary" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search vocabulary..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg bg-cream border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          placeholder="Search vocabulary"
+          className="w-full border-0 border-b border-rule bg-transparent py-2 pl-6 text-[15px] text-ink placeholder:font-display placeholder:italic placeholder:text-ink-tertiary focus:border-ink focus:outline-none transition-colors"
         />
       </div>
 
-      <div className="max-h-60 overflow-y-auto space-y-1">
+      <div className="max-h-64 overflow-y-auto divide-y divide-rule">
         {filtered.length === 0 ? (
-          <p className="text-sm text-ink-secondary py-2">
+          <Marginalia>
             {query
               ? 'No matches found.'
               : 'All words are already in this group.'}
-          </p>
+          </Marginalia>
         ) : (
           filtered.map((word) => {
             const isAdded = addedIds.has(word.id)
             return (
               <div
                 key={word.id}
-                className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-cream border border-border"
+                className="flex items-baseline justify-between gap-4 py-3"
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-ink truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-[16px] font-semibold text-ink truncate">
                     {word.term}
                   </p>
-                  <p className="text-xs text-ink-secondary truncate">
+                  <p className="font-display italic text-[13px] text-ink-secondary truncate">
                     {word.definition}
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleAdd(word.id)}
                   disabled={isPending || isAdded}
-                  className={`shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    isAdded
-                      ? 'bg-success-subtle text-success'
-                      : 'bg-accent text-white hover:bg-accent-hover'
-                  }`}
+                  className="shrink-0 inline-flex items-center gap-1 text-[12px] uppercase tracking-[0.14em] font-semibold transition-colors disabled:cursor-not-allowed"
                 >
                   {addingId === word.id ? (
-                    <Loader2 size={12} className="animate-spin" />
+                    <Loader2 size={12} className="animate-spin text-ink-tertiary" />
                   ) : isAdded ? (
-                    'Added'
-                  ) : (
                     <>
-                      <Plus size={12} />
-                      Add
+                      <Check size={12} className="text-accent" />
+                      <span className="text-accent">Added</span>
                     </>
+                  ) : (
+                    <span className="text-ink hover:text-accent">Add</span>
                   )}
                 </button>
               </div>
@@ -124,6 +122,6 @@ export function AddWordsToGroup({
           })
         )}
       </div>
-    </div>
+    </section>
   )
 }

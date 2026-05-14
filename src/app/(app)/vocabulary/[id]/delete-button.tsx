@@ -2,8 +2,9 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from 'lucide-react'
 import { deleteVocabulary } from '@/lib/actions/vocabulary'
+import { Button } from '@/components/ui/button'
 
 export function DeleteVocabularyButton({ id }: { id: string }) {
   const router = useRouter()
@@ -22,14 +23,15 @@ export function DeleteVocabularyButton({ id }: { id: string }) {
   }
 
   return (
-    <button
+    <Button
       type="button"
       onClick={handleClick}
       disabled={isPending}
-      className="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-error-subtle text-error text-sm font-medium hover:bg-error/10 transition-colors disabled:opacity-60"
+      variant="danger"
+      size="lg"
     >
-      <Trash2 size={16} />
+      {isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
       Delete
-    </button>
+    </Button>
   )
 }

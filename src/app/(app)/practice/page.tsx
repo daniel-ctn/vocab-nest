@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, ArrowRight, BrainCircuit } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { requireUser } from '@/lib/session'
 import { isPro } from '@/lib/data/subscription'
 import { getOrCreateTodayPractice } from '@/lib/data/practice'
 import { getGroupWithVocabulary } from '@/lib/data/groups'
+import { ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Rule } from '@/components/ui/rule'
 import { PracticeRunner } from './practice-runner'
 
 export default async function PracticePage({
@@ -29,53 +32,41 @@ export default async function PracticePage({
 
   if (!today) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-border-subtle flex items-center justify-center mb-4">
-          <BrainCircuit size={28} className="text-ink-secondary" />
-        </div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          All caught up
+      <div className="mx-auto max-w-xl space-y-8 py-12 text-center">
+        <Caps as="div">All caught up</Caps>
+        <h2 className="font-display text-5xl font-semibold leading-[0.95] tracking-tight text-ink">
+          Nothing due.
         </h2>
-        <p className="text-ink-secondary mt-2 max-w-sm">
+        <Rule animate />
+        <p className="font-display italic text-[17px] text-ink-secondary">
           {groupData
-            ? `No words in "${groupData.group.name}" are due for review right now.`
-            : 'You have no words due for review today. Add more vocabulary to keep learning.'}
+            ? `No words in "${groupData.group.name}" are due for review.`
+            : 'You have no words due today. Add more vocabulary or come back tomorrow.'}
         </p>
         {groupData ? (
-          <Link
-            href={`/groups/${groupId}`}
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-          >
-            <ArrowLeft size={16} />
+          <ButtonLink href={`/groups/${groupId}`} variant="outline">
+            <ArrowLeft size={14} />
             Back to {groupData.group.name}
-          </Link>
+          </ButtonLink>
         ) : (
-          <Link
-            href="/vocabulary/new"
-            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-          >
-            <ArrowRight size={16} />
+          <ButtonLink href="/vocabulary/new" variant="primary">
             Add a word
-          </Link>
+          </ButtonLink>
         )}
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {groupData && (
-        <div className="flex items-center gap-2 text-sm text-ink-secondary">
-          <Link
-            href={`/groups/${groupId}`}
-            className="inline-flex items-center gap-1 hover:text-ink transition-colors"
-          >
-            <ArrowLeft size={14} />
-            {groupData.group.name}
-          </Link>
-          <span>/</span>
-          <span>Practice</span>
-        </div>
+        <Link
+          href={`/groups/${groupId}`}
+          className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] font-semibold text-ink-secondary transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={14} />
+          {groupData.group.name}
+        </Link>
       )}
       <PracticeRunner session={today.session} definitions={today.definitions} />
     </div>

@@ -2,16 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Loader2,
-  Check,
-  X,
-  PartyPopper,
-  RotateCcw,
-  Volume2,
-} from 'lucide-react'
+import { Check, Loader2, X } from 'lucide-react'
 import { completePractice, reviewPracticeItem } from '@/lib/actions/practice'
 import { SpeakButton } from '@/components/speak-button'
+import { Button, ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Rule } from '@/components/ui/rule'
+import { TallyMarks } from '@/components/ui/tally-marks'
+import { cn } from '@/lib/cn'
 import type { PracticeSession } from '@/lib/contracts'
 
 export function PracticeRunner({
@@ -25,6 +23,7 @@ export function PracticeRunner({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [kept, setKept] = useState(0)
   const [isPending, startTransition] = useTransition()
 
   const item = session.items[currentIndex]
@@ -34,6 +33,7 @@ export function PracticeRunner({
     startTransition(async () => {
       try {
         await reviewPracticeItem(session.id, item.id, { remembered })
+        if (remembered) setKept((n) => n + 1)
         if (currentIndex + 1 >= session.items.length) {
           await completePractice(session.id)
           setCompleted(true)
@@ -48,32 +48,51 @@ export function PracticeRunner({
   }
 
   if (completed) {
+    const total = session.items.length
+    const lost = total - kept
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-success-subtle flex items-center justify-center mb-4">
-          <PartyPopper size={28} className="text-success" />
-        </div>
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Session complete
+      <div className="mx-auto max-w-xl space-y-10 py-12 text-center">
+        <Caps as="div">Session complete</Caps>
+        <h2 className="font-display text-5xl font-semibold leading-[0.95] tracking-tight text-ink">
+          The ink is dry.
         </h2>
-        <p className="text-ink-secondary mt-2 max-w-sm">
-          Great job! You reviewed {session.items.length} word
-          {session.items.length > 1 ? 's' : ''} today.
+        <Rule animate />
+        <div className="flex items-end justify-center gap-12">
+          <div className="flex flex-col items-center gap-2">
+            <div className="font-display text-6xl font-semibold leading-none text-ink">
+              {kept}
+            </div>
+            <Caps>Kept</Caps>
+            <TallyMarks count={kept} />
+          </div>
+          <div className="self-stretch w-px bg-rule" />
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className={cn(
+                'font-display text-6xl font-semibold leading-none',
+                lost > 0 ? 'text-ink-tertiary' : 'text-ink-tertiary'
+              )}
+            >
+              {lost}
+            </div>
+            <Caps>Lost</Caps>
+            <TallyMarks count={lost} />
+          </div>
+        </div>
+        <p className="font-display italic text-[16px] text-ink-secondary">
+          {kept === total
+            ? 'A perfect copy.'
+            : lost === total
+              ? 'Nothing sticks the first time. Try again soon.'
+              : 'Steady work.'}
         </p>
-        <div className="flex items-center gap-3 mt-6">
-          <button
-            onClick={() => router.refresh()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-          >
-            <RotateCcw size={16} />
+        <div className="flex items-center justify-center gap-3">
+          <Button onClick={() => router.refresh()} variant="primary">
             Practice again
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-ink-secondary hover:bg-border-subtle transition-colors"
-          >
-            Go to dashboard
-          </button>
+          </Button>
+          <ButtonLink href="/dashboard" variant="outline">
+            To dashboard
+          </ButtonLink>
         </div>
       </div>
     )
@@ -81,81 +100,101 @@ export function PracticeRunner({
 
   if (!item) return null
 
-  const progress = (currentIndex / session.items.length) * 100
+  const progress = ((currentIndex + (revealed ? 0.5 : 0)) / session.items.length) * 100
   const definition = definitions[item.vocabularyId] ?? 'Definition not found'
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center justify-between text-sm text-ink-secondary mb-2">
-          <span>
+    <div className="mx-auto max-w-xl space-y-8">
+      {/* Progress — hairline with a moving bookmark */}
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">
             Card {currentIndex + 1} of {session.items.length}
+          </Caps>
+          <span className="font-display text-[12px] italic text-ink-tertiary tabular-nums">
+            {kept} kept · {currentIndex - kept} lost
           </span>
-          <span>{Math.round(progress)}% done</span>
         </div>
-        <div className="h-1.5 rounded-full bg-border-subtle overflow-hidden">
+        <div className="relative h-px w-full bg-rule">
           <div
-            className="h-full bg-accent transition-all duration-500"
+            className="absolute inset-y-0 left-0 bg-ink transition-all duration-500"
             style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute -top-1 h-3 w-[2px] bg-accent transition-all duration-500"
+            style={{ left: `calc(${progress}% - 1px)` }}
           />
         </div>
       </div>
 
-      <div className="p-6 sm:p-8 rounded-2xl bg-surface border border-border text-center">
-        <div className="text-sm text-ink-secondary mb-4 uppercase tracking-wide font-medium">
-          Do you remember this word?
-        </div>
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-ink">
-            {item.term}
-          </h2>
-          <SpeakButton text={item.term} />
-        </div>
-
-        {!revealed ? (
-          <button
-            onClick={() => setRevealed(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-          >
-            Reveal definition
-          </button>
-        ) : (
-          <div className="space-y-6">
-            <div className="p-4 rounded-xl bg-cream border border-border text-left">
-              <div className="text-xs text-ink-tertiary uppercase tracking-wide font-medium mb-1">
-                Definition
-              </div>
-              <p className="text-ink">{definition}</p>
+      {/* Paper card with 3D flip */}
+      <div className="perspective-1200">
+        <div
+          className={cn(
+            'relative min-h-[280px] w-full preserve-3d transition-transform duration-[450ms]',
+            revealed && 'rotate-y-180'
+          )}
+          style={{ transitionTimingFunction: 'var(--ease-paper)' }}
+        >
+          {/* Front: term */}
+          <div className="backface-hidden absolute inset-0 flex flex-col items-center justify-center gap-6 bg-surface px-6 py-12 shadow-[0_10px_28px_-18px_rgba(20,15,10,0.22)] outline outline-1 outline-rule">
+            <Caps>Do you remember</Caps>
+            <div className="flex items-center gap-3">
+              <h2 className="font-display text-4xl font-semibold leading-[0.95] tracking-tight text-ink sm:text-5xl">
+                {item.term}
+              </h2>
+              <SpeakButton
+                text={item.term}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink"
+              />
             </div>
+            <button
+              type="button"
+              onClick={() => setRevealed(true)}
+              className="mt-2 text-[13px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[6px] hover:decoration-accent-hover"
+            >
+              Turn the card →
+            </button>
+          </div>
 
-            <div className="flex items-center justify-center gap-3">
-              <button
+          {/* Back: definition */}
+          <div className="backface-hidden rotate-y-180 absolute inset-0 flex flex-col gap-6 bg-surface px-6 py-10 shadow-[0_10px_28px_-18px_rgba(20,15,10,0.22)] outline outline-1 outline-rule">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-display text-2xl font-semibold leading-tight tracking-tight text-ink">
+                {item.term}
+              </h3>
+              <SpeakButton
+                text={item.term}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-sm text-ink-tertiary transition-colors hover:bg-border-subtle hover:text-ink"
+              />
+            </div>
+            <Rule />
+            <p className="flex-1 font-display text-[20px] italic leading-snug text-ink">
+              {definition}
+            </p>
+            <Rule />
+            <div className="grid grid-cols-2 gap-3">
+              <Button
                 onClick={() => handleReview(false)}
                 disabled={isPending}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-error-subtle text-error text-sm font-medium hover:bg-error/10 transition-colors disabled:opacity-60"
+                variant="outline"
+                size="lg"
               >
-                {isPending ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <X size={16} />
-                )}
-                Forgot
-              </button>
-              <button
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+                Lost
+              </Button>
+              <Button
                 onClick={() => handleReview(true)}
                 disabled={isPending}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-success-subtle text-success text-sm font-medium hover:bg-success/10 transition-colors disabled:opacity-60"
+                variant="primary"
+                size="lg"
               >
-                {isPending ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Check size={16} />
-                )}
-                Remembered
-              </button>
+                {isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                Kept
+              </Button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

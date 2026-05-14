@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { AlertTriangle, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 
 export default function GlobalError({
   error,
@@ -17,23 +17,82 @@ export default function GlobalError({
 
   return (
     <html>
-      <body className="min-h-dvh bg-cream flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-14 h-14 rounded-full bg-error-subtle flex items-center justify-center mb-4">
-          <AlertTriangle size={28} className="text-error" />
+      <body
+        style={{
+          minHeight: '100dvh',
+          backgroundColor: '#fdfbf7',
+          color: '#1a1a1a',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '0 24px',
+          fontFamily:
+            'ui-sans-serif, system-ui, -apple-system, "Work Sans", sans-serif',
+        }}
+      >
+        <div style={{ maxWidth: 420, textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              color: '#6b6b6b',
+              marginBottom: 16,
+            }}
+          >
+            Something tore
+          </div>
+          <h2
+            style={{
+              fontFamily: '"Fraunces", serif',
+              fontSize: 44,
+              fontWeight: 600,
+              lineHeight: 1,
+              margin: '0 0 24px',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            A page came loose.
+          </h2>
+          <div
+            style={{
+              height: 1,
+              background: '#d8d4cc',
+              margin: '0 auto 24px',
+              maxWidth: 320,
+            }}
+          />
+          <p
+            style={{
+              fontFamily: '"Fraunces", serif',
+              fontStyle: 'italic',
+              fontSize: 17,
+              color: '#6b6b6b',
+              marginBottom: 28,
+            }}
+          >
+            An unexpected error occurred. Please try again.
+          </p>
+          <button
+            onClick={reset}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 20px',
+              background: '#1a1a1a',
+              color: '#fdfbf7',
+              border: 0,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <RotateCcw size={14} />
+            Try again
+          </button>
         </div>
-        <h2 className="font-display text-2xl font-semibold text-ink mb-2">
-          Something went wrong
-        </h2>
-        <p className="text-sm text-ink-secondary max-w-sm mb-6">
-          An unexpected error occurred. Please try again.
-        </p>
-        <button
-          onClick={reset}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-        >
-          <RotateCcw size={16} />
-          Try again
-        </button>
       </body>
     </html>
   )

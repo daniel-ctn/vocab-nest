@@ -1,49 +1,45 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowLeft, BookOpen, BrainCircuit, Tag } from 'lucide-react'
+import { ArrowLeft, BrainCircuit } from 'lucide-react'
 import { requireUser } from '@/lib/session'
 import { isPro } from '@/lib/data/subscription'
 import {
   getGroupWithVocabulary,
   listVocabularyNotInGroup,
 } from '@/lib/data/groups'
+import { ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Marginalia } from '@/components/ui/marginalia'
+import {
+  Specimen,
+  SpecimenBody,
+  SpecimenDefinition,
+  SpecimenList,
+  SpecimenTerm,
+} from '@/components/ui/specimen'
 import { DeleteGroupButton } from './delete-group-button'
 import { AddWordsToGroup } from './add-words'
 import type { VocabularyEntry } from '@/lib/contracts'
 
-function VocabRow({ entry }: { entry: VocabularyEntry }) {
+function WordRow({ entry }: { entry: VocabularyEntry }) {
   return (
-    <Link
-      href={`/vocabulary/${entry.id}`}
-      className="flex items-start justify-between gap-4 p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors"
-    >
-      <div className="min-w-0">
-        <h3 className="font-display text-base font-semibold text-ink truncate">
-          {entry.term}
-        </h3>
-        <p className="text-sm text-ink-secondary mt-0.5 line-clamp-2">
-          {entry.definition}
-        </p>
-        <div className="flex flex-wrap items-center gap-2 mt-2">
+    <Specimen href={`/vocabulary/${entry.id}`}>
+      <SpecimenBody>
+        <div className="flex items-baseline gap-3">
+          <SpecimenTerm size="sm">{entry.term}</SpecimenTerm>
           {entry.partOfSpeech && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-border-subtle text-xs font-medium text-ink-secondary">
-              {entry.partOfSpeech}
-            </span>
+            <Marginalia className="shrink-0">
+              {entry.partOfSpeech}.
+            </Marginalia>
           )}
-          {entry.tags.slice(0, 3).map((tag) => (
-            <Link
-              key={tag}
-              href={`/vocabulary?tag=${encodeURIComponent(tag)}`}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent-subtle text-xs font-medium text-accent hover:bg-accent/10 transition-colors"
-            >
-              <Tag size={10} />
-              {tag}
-            </Link>
-          ))}
         </div>
-      </div>
-    </Link>
+        <SpecimenDefinition className="line-clamp-2">
+          {entry.definition}
+        </SpecimenDefinition>
+      </SpecimenBody>
+      <span className="text-ink-tertiary">→</span>
+    </Specimen>
   )
 }
 
@@ -66,70 +62,63 @@ export default async function GroupDetailPage({
   ])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <Link
         href="/groups"
-        className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink transition-colors"
+        className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] font-semibold text-ink-secondary transition-colors hover:text-ink"
       >
-        <ArrowLeft size={16} />
-        Back to groups
+        <ArrowLeft size={14} />
+        Groups
       </Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold text-ink">
-            {group.name}
-          </h1>
-          {group.description && (
-            <p className="text-ink-secondary mt-1">{group.description}</p>
-          )}
-          <div className="mt-2 flex items-center gap-1.5 text-sm text-ink-secondary">
-            <BookOpen size={14} />
-            {items.length} word{items.length !== 1 ? 's' : ''}
+      <Chapter
+        eyebrow={`${items.length} word${items.length !== 1 ? 's' : ''}`}
+        title={group.name}
+        subtitle={group.description ?? undefined}
+        aside={
+          <div className="flex items-center gap-3">
+            {pro ? (
+              <ButtonLink href={`/practice?group=${group.id}`} variant="accent">
+                <BrainCircuit size={14} />
+                Practice
+              </ButtonLink>
+            ) : (
+              <ButtonLink href="/upgrade" variant="outline">
+                <BrainCircuit size={14} />
+                Practice (Pro)
+              </ButtonLink>
+            )}
+            <DeleteGroupButton id={group.id} />
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {pro ? (
-            <Link
-              href={`/practice?group=${group.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-            >
-              <BrainCircuit size={16} />
-              Practice
-            </Link>
-          ) : (
-            <Link
-              href="/upgrade"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium text-ink-secondary hover:bg-border-subtle transition-colors"
-            >
-              <BrainCircuit size={16} />
-              Practice
-            </Link>
-          )}
-          <DeleteGroupButton id={group.id} />
-        </div>
-      </div>
+        }
+      />
 
       {availableWords.length > 0 && (
         <AddWordsToGroup groupId={group.id} words={availableWords} />
       )}
 
       {items.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-ink-secondary">No words in this group yet.</p>
+        <div className="py-12 text-center">
+          <div className="font-display text-5xl text-ink-tertiary">—</div>
+          <p className="mt-3 font-display italic text-[15px] text-ink-tertiary">
+            No words in this group yet.
+          </p>
           <Link
             href="/vocabulary"
-            className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-accent hover:underline"
+            className="mt-6 inline-block text-[13px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
           >
-            Browse vocabulary
+            Browse vocabulary →
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          {items.map((entry) => (
-            <VocabRow key={entry.id} entry={entry} />
-          ))}
-        </div>
+        <section className="space-y-4">
+          <Caps as="div">Words in this group</Caps>
+          <SpecimenList>
+            {items.map((entry) => (
+              <WordRow key={entry.id} entry={entry} />
+            ))}
+          </SpecimenList>
+        </section>
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-import { and, eq, lte, sql } from 'drizzle-orm'
+import { and, asc, eq, lte, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import {
   groups,
@@ -8,6 +8,47 @@ import {
   vocabularyEntries,
   vocabularyReviewStats,
 } from '@/lib/db/schema'
+
+export type DuePreviewEntry = {
+  id: string
+  term: string
+  definition: string
+  partOfSpeech?: string | null
+}
+
+export async function getDueWordsPreview(
+  userId: string,
+  limit = 3
+): Promise<DuePreviewEntry[]> {
+  const rows = await db
+    .select({
+      id: vocabularyEntries.id,
+      term: vocabularyEntries.term,
+      definition: vocabularyEntries.definition,
+      partOfSpeech: vocabularyEntries.partOfSpeech,
+      nextReviewAt: vocabularyReviewStats.nextReviewAt,
+    })
+    .from(vocabularyReviewStats)
+    .innerJoin(
+      vocabularyEntries,
+      eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+    )
+    .where(
+      and(
+        eq(vocabularyEntries.userId, userId),
+        lte(vocabularyReviewStats.nextReviewAt, new Date())
+      )
+    )
+    .orderBy(asc(vocabularyReviewStats.nextReviewAt))
+    .limit(limit)
+
+  return rows.map((r) => ({
+    id: r.id,
+    term: r.term,
+    definition: r.definition,
+    partOfSpeech: r.partOfSpeech,
+  }))
+}
 
 export async function getDashboardSummary(userId: string) {
   const now = new Date()

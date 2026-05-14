@@ -1,38 +1,31 @@
 import Link from 'next/link'
-import {
-  ArrowRight,
-  BookOpen,
-  BrainCircuit,
-  TrendingUp,
-  AlertTriangle,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { requireUser } from '@/lib/session'
 import { isPro } from '@/lib/data/subscription'
 import { getLearningStats } from '@/lib/data/stats'
+import { ButtonLink } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
+import { Stat, StatRow } from '@/components/ui/stat'
+import {
+  Specimen,
+  SpecimenBody,
+  SpecimenDefinition,
+  SpecimenList,
+  SpecimenTerm,
+} from '@/components/ui/specimen'
+import { toRoman } from '@/components/ui/roman'
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string
-  value: string | number
-  icon: React.ElementType
-}) {
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border">
-      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-border-subtle text-ink-secondary shrink-0">
-        <Icon size={18} />
-      </div>
-      <div>
-        <div className="text-2xl font-display font-semibold text-ink leading-none">
-          {value}
-        </div>
-        <div className="text-sm text-ink-secondary mt-1">{label}</div>
-      </div>
-    </div>
-  )
-}
+// Bookbinder rename of the four mastery tiers (index-aligned with data).
+const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
+const TIER_INTENSITY = [
+  'bg-ink/15',
+  'bg-ink/35',
+  'bg-ink/60',
+  'bg-ink',
+] as const
 
 export default async function StatsPage() {
   const user = await requireUser()
@@ -40,207 +33,197 @@ export default async function StatsPage() {
 
   if (!pro) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-        <h2 className="font-display text-2xl font-semibold text-ink">
-          Pro feature
+      <div className="mx-auto max-w-xl space-y-8 py-16 text-center">
+        <Caps as="div">Pro feature</Caps>
+        <h2 className="font-display text-5xl font-semibold leading-[0.95] tracking-tight text-ink">
+          A deeper read.
         </h2>
-        <p className="text-ink-secondary max-w-sm">
-          Advanced stats and insights are available on the Pro plan.
+        <Rule animate />
+        <p className="font-display italic text-[17px] text-ink-secondary">
+          Advanced stats and insights live on the Pro plan.
         </p>
-        <Link
-          href="/upgrade"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
-        >
+        <ButtonLink href="/upgrade" variant="accent" size="lg">
           Upgrade to Pro
-        </Link>
+        </ButtonLink>
       </div>
     )
   }
 
   const stats = await getLearningStats(user.id)
-
   const totalMastery = stats.masteryDistribution.reduce(
     (s, b) => s + b.count,
     0
   )
-
-  const maxActivity = Math.max(
-    ...stats.recentActivity.map((d) => d.count),
-    1
-  )
-
+  const maxActivity = Math.max(...stats.recentActivity.map((d) => d.count), 1)
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-semibold text-ink">
-          Stats
-        </h1>
-        <p className="text-ink-secondary mt-1">
-          Insights into your learning progress.
-        </p>
-      </div>
+    <div className="space-y-12">
+      <Chapter
+        eyebrow={`Part ${toRoman(5)}`}
+        title="Stats"
+        subtitle="A reading of your progress."
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Total words"
-          value={stats.totalVocabulary}
-          icon={BookOpen}
-        />
-        <StatCard
-          label="Due today"
-          value={stats.dueToday}
-          icon={BrainCircuit}
-        />
-        <StatCard
-          label="Overall accuracy"
-          value={`${stats.overallAccuracy}%`}
-          icon={TrendingUp}
-        />
-      </div>
+      {/* Headline ledger */}
+      <section>
+        <StatRow cols={3}>
+          <Stat
+            value={stats.totalVocabulary.toLocaleString()}
+            label="Total words"
+          />
+          <Stat
+            value={stats.dueToday}
+            label="Due today"
+            active={stats.dueToday > 0}
+          />
+          <Stat
+            value={`${stats.overallAccuracy}%`}
+            label="Accuracy"
+            hint={
+              stats.overallAccuracy >= 80
+                ? 'a steady hand'
+                : stats.overallAccuracy >= 60
+                  ? 'finding your feet'
+                  : stats.overallAccuracy > 0
+                    ? 'rough waters'
+                    : undefined
+            }
+          />
+        </StatRow>
+      </section>
 
-      <div className="p-5 sm:p-6 rounded-2xl bg-surface border border-border space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold text-ink">
-            Mastery distribution
-          </h2>
-          <span className="text-sm text-ink-secondary">
-            {totalMastery} words tracked
+      {/* Mastery — specimen strip */}
+      <section className="space-y-5">
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">Mastery</Caps>
+          <span className="font-display text-[13px] italic text-ink-tertiary">
+            {totalMastery} word{totalMastery !== 1 ? 's' : ''} tracked
           </span>
         </div>
-
+        <Rule />
         {totalMastery === 0 ? (
-          <p className="text-sm text-ink-secondary">
+          <Marginalia>
             Start practicing to see your mastery distribution.
-          </p>
+          </Marginalia>
         ) : (
-          <>
-            <div className="flex items-end gap-2 h-40">
-              {stats.masteryDistribution.map((bucket) => {
+          <div className="space-y-4">
+            {/* Horizontal stacked specimen strip */}
+            <div
+              className="flex h-2 w-full overflow-hidden bg-rule"
+              role="img"
+              aria-label="Mastery distribution"
+            >
+              {stats.masteryDistribution.map((bucket, i) => {
+                const pct = (bucket.count / totalMastery) * 100
+                if (pct <= 0) return null
+                return (
+                  <div
+                    key={bucket.label}
+                    className={TIER_INTENSITY[i]}
+                    style={{ width: `${pct}%` }}
+                  />
+                )
+              })}
+            </div>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+              {stats.masteryDistribution.map((bucket, i) => {
                 const pct =
                   totalMastery > 0
                     ? Math.round((bucket.count / totalMastery) * 100)
                     : 0
                 return (
-                  <div
-                    key={bucket.label}
-                    className="flex-1 flex flex-col items-center gap-2"
-                  >
-                    <div className="text-sm font-display font-semibold text-ink">
-                      {bucket.count}
-                    </div>
-                    <div className="w-full flex-1 rounded-lg bg-border-subtle overflow-hidden relative">
-                      <div
-                        className={`absolute bottom-0 left-0 right-0 ${bucket.color} opacity-80 rounded-lg transition-all`}
-                        style={{ height: `${pct}%` }}
+                  <div key={bucket.label} className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        aria-hidden
+                        className={`inline-block h-2 w-2 ${TIER_INTENSITY[i]}`}
                       />
+                      <Caps>{TIER_NAMES[i]}</Caps>
                     </div>
-                    <div className="text-xs text-ink-secondary font-medium">
-                      {bucket.label}
-                    </div>
+                    <dd className="font-display text-[28px] font-semibold leading-none tabular-nums text-ink">
+                      {bucket.count}
+                    </dd>
+                    <Marginalia>{pct}%</Marginalia>
                   </div>
                 )
               })}
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {stats.masteryDistribution.map((bucket) => (
-                <div
-                  key={bucket.label}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <span
-                    className={`w-3 h-3 rounded-full ${bucket.color}`}
-                  />
-                  <span className="text-ink-secondary">{bucket.label}</span>
-                </div>
-              ))}
-            </div>
-          </>
+            </dl>
+          </div>
         )}
-      </div>
+      </section>
 
-      <div className="p-5 sm:p-6 rounded-2xl bg-surface border border-border space-y-5">
-        <h2 className="font-display text-xl font-semibold text-ink">
-          Recent activity
-        </h2>
-        <div className="flex items-end gap-1.5 h-24">
+      {/* Recent activity */}
+      <section className="space-y-5">
+        <Caps as="div">Recent activity</Caps>
+        <Rule />
+        <div className="flex items-end gap-1.5 h-28">
           {stats.recentActivity.map((day) => {
             const pct = Math.round((day.count / maxActivity) * 100)
             const dateObj = new Date(day.date)
             const label = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`
+            const hasActivity = day.count > 0
             return (
               <div
                 key={day.date}
-                className="flex-1 flex flex-col items-center gap-1.5"
+                className="flex flex-1 flex-col items-center gap-2"
                 title={`${label}: ${day.count} review${day.count !== 1 ? 's' : ''}`}
               >
-                <div className="w-full flex-1 rounded bg-border-subtle overflow-hidden relative">
+                <div className="relative w-full flex-1 bg-rule">
                   <div
-                    className="absolute bottom-0 left-0 right-0 bg-accent/70 rounded transition-all"
+                    className={`absolute bottom-0 left-0 right-0 transition-all ${
+                      hasActivity ? 'bg-ink' : 'bg-transparent'
+                    }`}
                     style={{ height: `${pct}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-ink-tertiary font-medium">
+                <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-tertiary">
                   {dayLabels[dateObj.getDay()]}
                 </span>
               </div>
             )
           })}
         </div>
-      </div>
+      </section>
 
-      <div className="p-5 sm:p-6 rounded-2xl bg-surface border border-border space-y-5">
-        <div className="flex items-center gap-2">
-          <AlertTriangle size={18} className="text-warning" />
-          <h2 className="font-display text-xl font-semibold text-ink">
-            Words needing attention
-          </h2>
-        </div>
-
+      {/* Weak words */}
+      <section className="space-y-4">
+        <Caps as="div">Words that slip</Caps>
+        <Rule />
         {stats.weakWords.length === 0 ? (
-          <p className="text-sm text-ink-secondary">
-            No struggling words right now. Great job!
-          </p>
+          <Marginalia>No struggling words right now. Steady.</Marginalia>
         ) : (
-          <div className="space-y-2">
+          <SpecimenList>
             {stats.weakWords.map((word) => (
-              <Link
-                key={word.id}
-                href={`/vocabulary/${word.id}`}
-                className="flex items-center justify-between gap-4 p-3 rounded-xl bg-cream border border-border hover:border-accent/30 transition-colors"
-              >
-                <div className="min-w-0">
-                  <div className="font-display text-sm font-semibold text-ink truncate">
-                    {word.term}
-                  </div>
-                  <div className="text-xs text-ink-secondary truncate">
+              <Specimen key={word.id} href={`/vocabulary/${word.id}`}>
+                <SpecimenBody>
+                  <SpecimenTerm size="sm">{word.term}</SpecimenTerm>
+                  <SpecimenDefinition className="line-clamp-1">
                     {word.definition}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-sm font-medium text-error">
+                  </SpecimenDefinition>
+                </SpecimenBody>
+                <div className="flex shrink-0 flex-col items-end gap-0.5">
+                  <span className="font-display text-[22px] font-semibold leading-none tabular-nums text-accent">
                     {word.accuracy}%
-                  </div>
-                  <div className="text-xs text-ink-tertiary">
+                  </span>
+                  <Marginalia>
                     {word.totalReviews} review
                     {word.totalReviews !== 1 ? 's' : ''}
-                  </div>
+                  </Marginalia>
                 </div>
-              </Link>
+              </Specimen>
             ))}
-          </div>
+          </SpecimenList>
         )}
-      </div>
+      </section>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center pt-4">
         <Link
           href="/practice"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
+          className="inline-flex items-center gap-2 text-[14px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[6px] hover:decoration-accent-hover"
         >
           Keep practicing
-          <ArrowRight size={16} />
+          <ArrowRight size={14} />
         </Link>
       </div>
     </div>

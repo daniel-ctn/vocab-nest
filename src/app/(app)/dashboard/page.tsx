@@ -1,169 +1,192 @@
 import Link from 'next/link'
-import {
-  BookOpen,
-  FolderOpen,
-  BrainCircuit,
-  Flame,
-  ArrowRight,
-  Plus,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { requireUser } from '@/lib/session'
-import { getDashboardSummary } from '@/lib/data/dashboard'
+import { getDashboardSummary, getDueWordsPreview } from '@/lib/data/dashboard'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
+import { Stat, StatRow } from '@/components/ui/stat'
+import {
+  Specimen,
+  SpecimenBody,
+  SpecimenDefinition,
+  SpecimenList,
+  SpecimenTerm,
+} from '@/components/ui/specimen'
+import { TallyMarks } from '@/components/ui/tally-marks'
+import { ButtonLink } from '@/components/ui/button'
+import { toRoman } from '@/components/ui/roman'
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  accent,
-}: {
-  label: string
-  value: number
-  icon: React.ElementType
-  accent?: boolean
-}) {
-  return (
-    <div className="flex items-center gap-4 p-4 rounded-xl bg-surface border border-border">
-      <div
-        className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${
-          accent
-            ? 'bg-accent text-white'
-            : 'bg-border-subtle text-ink-secondary'
-        }`}
-      >
-        <Icon size={18} />
-      </div>
-      <div>
-        <div className="text-2xl font-display font-semibold text-ink leading-none">
-          {value}
-        </div>
-        <div className="text-sm text-ink-secondary mt-1">{label}</div>
-      </div>
-    </div>
-  )
+function weekdayLabel() {
+  return new Date().toLocaleDateString(undefined, { weekday: 'long' })
 }
 
 export default async function DashboardPage() {
   const user = await requireUser()
-  const stats = await getDashboardSummary(user.id)
+  const [stats, dueWords] = await Promise.all([
+    getDashboardSummary(user.id),
+    getDueWordsPreview(user.id, 3),
+  ])
+
   const hasDue = stats.dueToday > 0
+  const remainingGoal = Math.max(0, stats.dailyGoal - stats.reviewedToday)
+  const goalPct = Math.min(
+    100,
+    Math.round((stats.reviewedToday / Math.max(1, stats.dailyGoal)) * 100)
+  )
+  const goalMet = stats.reviewedToday >= stats.dailyGoal
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-semibold text-ink">
-          Dashboard
-        </h1>
-        <p className="text-ink-secondary mt-1">
-          Here&apos;s how your learning is going today.
-        </p>
-      </div>
+    <div className="space-y-12">
+      <Chapter
+        eyebrow={`Chapter ${toRoman(1)} — ${weekdayLabel()}`}
+        title="Dashboard"
+        subtitle={
+          hasDue
+            ? `${stats.dueToday} word${stats.dueToday > 1 ? 's' : ''} await review.`
+            : 'Nothing due. Add a word or browse what you have.'
+        }
+        aside={
+          hasDue ? (
+            <ButtonLink href="/practice" variant="accent" size="lg">
+              Start practice
+              <ArrowRight size={14} />
+            </ButtonLink>
+          ) : (
+            <ButtonLink href="/vocabulary/new" variant="primary" size="lg">
+              Add a word
+            </ButtonLink>
+          )
+        }
+      />
 
+      {/* Ledger of headline stats */}
+      <section>
+        <StatRow cols={3}>
+          <Stat
+            value={stats.totalVocabulary.toLocaleString()}
+            label="Words in your nest"
+            hint={
+              stats.totalGroups > 0
+                ? `across ${stats.totalGroups} group${stats.totalGroups > 1 ? 's' : ''}`
+                : undefined
+            }
+          />
+          <Stat
+            value={stats.streakDays}
+            label="Day streak"
+            active={stats.streakDays > 0}
+            hint={
+              stats.streakDays > 0 ? (
+                <TallyMarks count={stats.streakDays} />
+              ) : (
+                'no streak yet'
+              )
+            }
+          />
+          <Stat
+            value={stats.dueToday}
+            label="Due today"
+            active={hasDue}
+            hint={hasDue ? 'awaiting review' : 'all caught up'}
+          />
+        </StatRow>
+      </section>
+
+      {/* Due-today specimens */}
       {hasDue && (
-        <div className="p-5 rounded-2xl bg-accent text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-xl font-semibold">
-              {stats.dueToday} word{stats.dueToday > 1 ? 's' : ''} due for
-              review
-            </h2>
-            <p className="text-white/80 text-sm mt-1">
-              Keep your streak alive and strengthen your memory.
-            </p>
+        <section className="space-y-5">
+          <div className="flex items-baseline justify-between">
+            <Caps as="div">Due today</Caps>
+            <Link
+              href="/practice"
+              className="text-[12px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
+            >
+              Practice {stats.dueToday > dueWords.length
+                ? `all ${stats.dueToday}`
+                : 'now'}{' '}
+              →
+            </Link>
           </div>
-          <Link
-            href="/practice"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-accent text-sm font-medium hover:bg-white/90 transition-colors shrink-0"
-          >
-            Start practice
-            <ArrowRight size={16} />
-          </Link>
-        </div>
+          <Rule />
+          <SpecimenList>
+            {dueWords.map((w) => (
+              <Specimen key={w.id} href={`/vocabulary/${w.id}`}>
+                <SpecimenBody>
+                  <div className="flex items-baseline gap-3">
+                    <SpecimenTerm>{w.term}</SpecimenTerm>
+                    {w.partOfSpeech && (
+                      <Marginalia className="hidden sm:inline">
+                        {w.partOfSpeech}.
+                      </Marginalia>
+                    )}
+                  </div>
+                  <SpecimenDefinition>{w.definition}</SpecimenDefinition>
+                </SpecimenBody>
+                <span className="font-display text-[12px] italic text-accent">
+                  due
+                </span>
+              </Specimen>
+            ))}
+          </SpecimenList>
+        </section>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total words"
-          value={stats.totalVocabulary}
-          icon={BookOpen}
-        />
-        <StatCard label="Groups" value={stats.totalGroups} icon={FolderOpen} />
-        <StatCard
-          label="Due today"
-          value={stats.dueToday}
-          icon={BrainCircuit}
-          accent={hasDue}
-        />
-        <StatCard
-          label="Streak"
-          value={stats.streakDays}
-          icon={Flame}
-          accent={stats.streakDays > 0}
-        />
-      </div>
-
-      <div className="p-5 rounded-2xl bg-surface border border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-lg font-semibold text-ink">
-            Daily goal
-          </h2>
-          <span className="text-sm text-ink-secondary">
-            {Math.min(stats.reviewedToday, stats.dailyGoal)} / {stats.dailyGoal}{' '}
-            words
+      {/* Daily goal — a hairline track with a bookmark ribbon */}
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">Daily goal</Caps>
+          <span className="font-display text-[14px] text-ink-secondary tabular-nums">
+            {Math.min(stats.reviewedToday, stats.dailyGoal)} /{' '}
+            {stats.dailyGoal}
           </span>
         </div>
-        <div className="h-2.5 rounded-full bg-border-subtle overflow-hidden">
+        <div className="relative h-px w-full bg-rule">
           <div
-            className="h-full bg-accent transition-all duration-500 rounded-full"
+            className="absolute inset-y-0 left-0 bg-ink"
+            style={{ width: `${goalPct}%` }}
+          />
+          {/* Bookmark ribbon */}
+          <div
+            className="absolute -top-1 h-3 w-[2px] bg-accent transition-all duration-500"
             style={{
-              width: `${Math.min(100, (stats.reviewedToday / stats.dailyGoal) * 100)}%`,
+              left: `calc(${goalPct}% - 1px)`,
             }}
           />
         </div>
-        {stats.reviewedToday >= stats.dailyGoal ? (
-          <p className="text-sm text-success mt-2">
-            Daily goal reached! Great work.
-          </p>
-        ) : (
-          <p className="text-sm text-ink-secondary mt-2">
-            {stats.dailyGoal - stats.reviewedToday} more to reach your daily goal.
-          </p>
-        )}
-      </div>
+        <Marginalia>
+          {goalMet
+            ? 'Goal met. The day is yours.'
+            : `${remainingGoal} more to keep the streak.`}
+        </Marginalia>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Link
-          href="/vocabulary/new"
-          className="group flex items-center gap-4 p-5 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors"
-        >
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-accent-subtle text-accent">
-            <Plus size={18} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-ink group-hover:text-accent transition-colors">
-              Add a new word
-            </div>
-            <div className="text-sm text-ink-secondary">
-              Expand your collection
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/groups"
-          className="group flex items-center gap-4 p-5 rounded-xl bg-surface border border-border hover:border-accent/30 transition-colors"
-        >
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-border-subtle text-ink-secondary">
-            <FolderOpen size={18} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-ink group-hover:text-accent transition-colors">
-              Organize into groups
-            </div>
-            <div className="text-sm text-ink-secondary">
-              Keep related words together
-            </div>
-          </div>
-        </Link>
-      </div>
+      {/* Quick links */}
+      <section className="space-y-4">
+        <Caps as="div">Elsewhere</Caps>
+        <Rule />
+        <SpecimenList>
+          <Specimen href="/vocabulary/new">
+            <SpecimenBody>
+              <SpecimenTerm size="sm">Add a new word</SpecimenTerm>
+              <SpecimenDefinition>
+                Collect another for the book.
+              </SpecimenDefinition>
+            </SpecimenBody>
+            <span className="text-ink-tertiary">→</span>
+          </Specimen>
+          <Specimen href="/groups">
+            <SpecimenBody>
+              <SpecimenTerm size="sm">Organise into groups</SpecimenTerm>
+              <SpecimenDefinition>
+                Keep kindred words together.
+              </SpecimenDefinition>
+            </SpecimenBody>
+            <span className="text-ink-tertiary">→</span>
+          </Specimen>
+        </SpecimenList>
+      </section>
     </div>
   )
 }

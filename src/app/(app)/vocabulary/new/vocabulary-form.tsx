@@ -2,8 +2,14 @@
 
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Plus, X, Save } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, X } from 'lucide-react'
 import { createVocabulary, updateVocabulary } from '@/lib/actions/vocabulary'
+import { Button } from '@/components/ui/button'
+import { Caps } from '@/components/ui/caps'
+import { Chapter } from '@/components/ui/chapter'
+import { Field, Input, Label, Textarea } from '@/components/ui/input'
+import { Rule } from '@/components/ui/rule'
+import { toRoman } from '@/components/ui/roman'
 import type { CreateVocabularyRequest, VocabularyEntry } from '@/lib/contracts'
 
 function TagInput({
@@ -27,26 +33,29 @@ function TagInput({
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap gap-2 mb-2">
-        {tags.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent-subtle text-xs font-medium text-accent"
-          >
-            {tag}
-            <button
-              onClick={() => onChange(tags.filter((t) => t !== tag))}
-              className="hover:text-accent-hover"
+    <div className="space-y-3">
+      {tags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] font-semibold text-ink"
             >
-              <X size={12} />
-            </button>
-          </span>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
+              {tag}
+              <button
+                type="button"
+                onClick={() => onChange(tags.filter((t) => t !== tag))}
+                className="text-ink-tertiary hover:text-accent"
+                aria-label={`Remove ${tag}`}
+              >
+                <X size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex items-end gap-3">
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -56,15 +65,17 @@ function TagInput({
             }
           }}
           placeholder={placeholder}
-          className="flex-1 px-3.5 py-2 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
         />
-        <button
+        <Button
           type="button"
           onClick={add}
-          className="px-3 py-2 rounded-lg bg-border-subtle text-ink-secondary hover:bg-border transition-colors"
+          variant="ghost"
+          size="sm"
+          className="mb-1"
         >
-          <Plus size={16} />
-        </button>
+          <Plus size={13} />
+          Add
+        </Button>
       </div>
     </div>
   )
@@ -87,24 +98,32 @@ function ExampleInput({
   }
 
   return (
-    <div className="space-y-2">
-      {examples.map((ex, i) => (
-        <div
-          key={i}
-          className="flex items-start gap-2 p-3 rounded-lg bg-border-subtle text-sm text-ink"
-        >
-          <span className="flex-1">{ex}</span>
-          <button
-            onClick={() => onChange(examples.filter((_, idx) => idx !== i))}
-            className="text-ink-tertiary hover:text-error shrink-0"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      ))}
-      <div className="flex gap-2">
-        <input
-          type="text"
+    <div className="space-y-4">
+      {examples.length > 0 && (
+        <ol className="space-y-2.5">
+          {examples.map((ex, i) => (
+            <li
+              key={i}
+              className="grid grid-cols-[28px_1fr_auto] items-baseline gap-3 text-[15px] leading-relaxed text-ink"
+            >
+              <span className="text-right font-display text-[13px] italic text-ink-tertiary">
+                {i + 1}.
+              </span>
+              <span className="font-display italic">{ex}</span>
+              <button
+                type="button"
+                onClick={() => onChange(examples.filter((_, idx) => idx !== i))}
+                className="text-ink-tertiary hover:text-accent"
+                aria-label="Remove example"
+              >
+                <X size={13} />
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+      <div className="flex items-end gap-3">
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -114,15 +133,17 @@ function ExampleInput({
             }
           }}
           placeholder="Add an example sentence"
-          className="flex-1 px-3.5 py-2 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
         />
-        <button
+        <Button
           type="button"
           onClick={add}
-          className="px-3 py-2 rounded-lg bg-border-subtle text-ink-secondary hover:bg-border transition-colors"
+          variant="ghost"
+          size="sm"
+          className="mb-1"
         >
-          <Plus size={16} />
-        </button>
+          <Plus size={13} />
+          Add
+        </Button>
       </div>
     </div>
   )
@@ -176,83 +197,77 @@ export function VocabularyForm({
   }
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="space-y-10">
       <button
+        type="button"
         onClick={() => router.back()}
-        className="inline-flex items-center gap-2 text-sm text-ink-secondary hover:text-ink transition-colors mb-6"
+        className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] font-semibold text-ink-secondary transition-colors hover:text-ink"
       >
-        <ArrowLeft size={16} />
+        <ArrowLeft size={14} />
         Back
       </button>
 
-      <h1 className="font-display text-3xl font-semibold text-ink mb-6">
-        {mode === 'create' ? 'Add a word' : 'Edit word'}
-      </h1>
+      <Chapter
+        eyebrow={`Chapter ${toRoman(mode === 'create' ? 1 : 2)}`}
+        title={mode === 'create' ? 'A new word' : 'Edit word'}
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">
-            Word or phrase
-          </label>
-          <input
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <Field>
+          <Label htmlFor="term">Word or phrase</Label>
+          <Input
+            id="term"
             required
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
             placeholder="e.g., Serendipity"
+            className="text-[22px] font-display font-semibold placeholder:font-display placeholder:not-italic placeholder:text-ink-tertiary"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">
-            Definition
-          </label>
-          <textarea
+        <Field>
+          <Label htmlFor="definition">Definition</Label>
+          <Textarea
+            id="definition"
             required
             rows={3}
             value={definition}
             onChange={(e) => setDefinition(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all resize-none"
             placeholder="e.g., The occurrence of events by chance in a happy way"
+            className="font-display italic text-[17px]"
           />
-        </div>
+        </Field>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Language
-            </label>
-            <input
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <Field>
+            <Label htmlFor="lang">Language</Label>
+            <Input
+              id="lang"
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-              placeholder="e.g., en"
+              placeholder="en"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">
-              Part of speech
-            </label>
-            <input
+          </Field>
+          <Field>
+            <Label htmlFor="pos">Part of speech</Label>
+            <Input
+              id="pos"
               value={partOfSpeech}
               onChange={(e) => setPartOfSpeech(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-surface border border-border text-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
-              placeholder="e.g., noun"
+              placeholder="noun"
             />
-          </div>
+          </Field>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">
-            Examples
-          </label>
+        <div className="space-y-4">
+          <Caps as="div">Examples</Caps>
+          <Rule />
           <ExampleInput examples={examples} onChange={setExamples} />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">
-            Tags
-          </label>
+        <div className="space-y-4">
+          <Caps as="div">Tags</Caps>
+          <Rule />
           <TagInput
             tags={tags}
             onChange={setTags}
@@ -260,24 +275,21 @@ export function VocabularyForm({
           />
         </div>
 
-        <div className="pt-2 flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors disabled:opacity-60"
-          >
-            {isPending && <Loader2 size={16} className="animate-spin" />}
-            <Save size={16} />
+        <Rule />
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <Button type="submit" disabled={isPending} variant="primary" size="lg">
+            {isPending && <Loader2 size={14} className="animate-spin" />}
             {mode === 'create' ? 'Save word' : 'Save changes'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => router.back()}
-            className="px-5 py-2.5 rounded-lg border border-border text-sm font-medium text-ink-secondary hover:bg-border-subtle transition-colors"
+            variant="ghost"
+            size="lg"
           >
             Cancel
-          </button>
-          {extraActions}
+          </Button>
+          {extraActions && <div className="ml-auto">{extraActions}</div>}
         </div>
       </form>
     </div>
