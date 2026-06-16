@@ -36,7 +36,7 @@ export function Wordmark({
       </span>
       <span
         className={cn(
-          'font-semibold uppercase tracking-[0.22em] text-ink',
+          'font-mono font-medium uppercase tracking-[0.2em] text-ink',
           text
         )}
       >

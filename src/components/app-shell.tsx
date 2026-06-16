@@ -41,7 +41,7 @@ function Wordmark({ size = 'md' }: { size?: 'sm' | 'md' }) {
       </span>
       <span
         className={cn(
-          'font-semibold uppercase tracking-[0.22em] text-ink',
+          'font-mono font-medium uppercase tracking-[0.2em] text-ink',
           titleSize
         )}
       >

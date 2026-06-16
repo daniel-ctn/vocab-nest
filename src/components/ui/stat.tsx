@@ -19,7 +19,7 @@ export function Stat({
     <div className={cn('flex flex-col gap-1.5', className)}>
       <div
         className={cn(
-          'font-display text-[44px] leading-none font-semibold tracking-tight sm:text-[56px]',
+          'font-display text-[52px] leading-[0.9] font-semibold tracking-[-0.02em] tabular-nums sm:text-[64px]',
           active ? 'text-accent' : 'text-ink'
         )}
       >

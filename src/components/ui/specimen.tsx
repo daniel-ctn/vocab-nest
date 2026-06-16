@@ -159,7 +159,7 @@ export function SpecimenMeta({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-[0.14em] font-semibold text-ink-tertiary',
+        'flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.16em] font-medium text-ink-tertiary',
         className
       )}
     >

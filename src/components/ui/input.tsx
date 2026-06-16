@@ -47,13 +47,13 @@ export function Label({
     <label
       htmlFor={htmlFor}
       className={cn(
-        'flex items-baseline justify-between text-[11px] uppercase tracking-[0.14em] font-semibold text-ink-secondary',
+        'flex items-baseline justify-between font-mono text-[10.5px] uppercase tracking-[0.18em] font-medium text-ink-secondary',
         className
       )}
     >
       <span>{children}</span>
       {hint && (
-        <span className="text-[11px] normal-case tracking-normal font-normal font-display italic text-ink-tertiary">
+        <span className="text-[12px] normal-case tracking-normal font-normal font-display italic text-ink-tertiary">
           {hint}
         </span>
       )}

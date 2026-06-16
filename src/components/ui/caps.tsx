@@ -13,7 +13,7 @@ export function Caps({
   return (
     <As
       className={cn(
-        'text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-secondary',
+        'font-mono text-[10.5px] font-medium uppercase tracking-[0.18em] text-ink-secondary',
         className
       )}
     >

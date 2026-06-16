@@ -17,17 +17,21 @@ export function Chapter({
   className?: string
 }) {
   return (
-    <header className={cn('space-y-4', className)}>
-      {eyebrow && <Caps as="div">{eyebrow}</Caps>}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl">
+    <header className={cn('space-y-5', className)}>
+      {eyebrow && (
+        <Caps as="div" className="animate-fade-up text-accent">
+          {eyebrow}
+        </Caps>
+      )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <h1 className="animate-fade-up font-display text-[40px] font-semibold leading-[0.96] tracking-[-0.02em] text-ink sm:text-[56px] lg:text-[64px]">
           {title}
         </h1>
-        {aside && <div className="shrink-0">{aside}</div>}
+        {aside && <div className="shrink-0 animate-fade-up">{aside}</div>}
       </div>
       <Rule animate />
       {subtitle && (
-        <p className="max-w-xl text-[15px] leading-relaxed text-ink-secondary">
+        <p className="max-w-xl font-display text-[18px] italic leading-relaxed text-ink-secondary">
           {subtitle}
         </p>
       )}
