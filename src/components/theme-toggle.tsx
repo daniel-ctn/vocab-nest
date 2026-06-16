@@ -1,20 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
-export function ThemeToggle({ className }: { className?: string }) {
-  const [isDark, setIsDark] = useState(false)
+const THEME_EVENT = 'vn-theme-change'
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'))
-  }, [])
+function subscribe(callback: () => void) {
+  window.addEventListener(THEME_EVENT, callback)
+  return () => window.removeEventListener(THEME_EVENT, callback)
+}
+
+function getSnapshot() {
+  return document.documentElement.classList.contains('dark')
+}
+
+export function ThemeToggle({ className }: { className?: string }) {
+  const isDark = useSyncExternalStore(subscribe, getSnapshot, () => false)
 
   function toggle() {
     const next = !isDark
-    setIsDark(next)
     document.documentElement.classList.toggle('dark', next)
     localStorage.setItem('vn-theme', next ? 'dark' : 'light')
+    window.dispatchEvent(new Event(THEME_EVENT))
   }
 
   return (

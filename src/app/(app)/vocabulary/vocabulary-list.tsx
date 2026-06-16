@@ -139,10 +139,7 @@ export function VocabularyList({
   const [, startTransition] = useTransition()
 
   useEffect(() => {
-    if (!query.trim()) {
-      setSearchResults(null)
-      return
-    }
+    if (!query.trim()) return
     const t = setTimeout(async () => {
       setSearching(true)
       try {
@@ -209,14 +206,21 @@ export function VocabularyList({
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value
+            setQuery(value)
+            if (!value.trim()) setSearchResults(null)
+          }}
           placeholder="Search words, definitions, tags"
           className="w-full border-0 border-b border-rule bg-transparent py-2 pl-6 pr-8 text-[15px] text-ink placeholder:font-display placeholder:italic placeholder:text-ink-tertiary focus:border-ink focus:outline-none transition-colors"
         />
         {query && !searching && (
           <button
             type="button"
-            onClick={() => setQuery('')}
+            onClick={() => {
+              setQuery('')
+              setSearchResults(null)
+            }}
             className="absolute bottom-2 right-0 text-ink-tertiary hover:text-ink"
             aria-label="Clear"
           >

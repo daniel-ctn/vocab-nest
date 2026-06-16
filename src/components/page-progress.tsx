@@ -3,29 +3,23 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
-export function PageProgress() {
-  const pathname = usePathname()
-  const [progress, setProgress] = useState(0)
-  const [visible, setVisible] = useState(false)
+function ProgressBar() {
+  const [progress, setProgress] = useState(30)
+  const [visible, setVisible] = useState(true)
 
   useEffect(() => {
-    setVisible(true)
-    setProgress(30)
-
     const t1 = setTimeout(() => setProgress(70), 100)
     const t2 = setTimeout(() => setProgress(95), 300)
-    const t3 = setTimeout(() => {
-      setProgress(100)
-      const t4 = setTimeout(() => setVisible(false), 280)
-      return () => clearTimeout(t4)
-    }, 500)
+    const t3 = setTimeout(() => setProgress(100), 500)
+    const t4 = setTimeout(() => setVisible(false), 780)
 
     return () => {
       clearTimeout(t1)
       clearTimeout(t2)
       clearTimeout(t3)
+      clearTimeout(t4)
     }
-  }, [pathname])
+  }, [])
 
   if (!visible) return null
 
@@ -41,4 +35,11 @@ export function PageProgress() {
       />
     </div>
   )
+}
+
+export function PageProgress() {
+  const pathname = usePathname()
+  // Remount per route change so the animation restarts without
+  // synchronously setting state inside an effect.
+  return <ProgressBar key={pathname} />
 }
