@@ -7,6 +7,7 @@ import { Feather, LogOut, MoreHorizontal, Settings, Shield } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { PageProgress } from '@/components/page-progress'
+import { TimeZoneSync } from '@/components/timezone-sync'
 import { Caps } from '@/components/ui/caps'
 import { Rule } from '@/components/ui/rule'
 import { toRoman } from '@/components/ui/roman'
@@ -296,6 +297,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh bg-cream">
       <PageProgress />
+      <TimeZoneSync />
       <Sidebar isAdmin={isAdmin} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar isAdmin={isAdmin} />

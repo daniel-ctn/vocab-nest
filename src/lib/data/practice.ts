@@ -8,6 +8,7 @@ import {
   vocabularyReviewStats,
 } from '@/lib/db/schema'
 import type { PracticeSession } from '@/lib/contracts'
+import { dayKeyInTimeZone } from '@/lib/date'
 
 export type TodayPractice = {
   session: PracticeSession
@@ -53,10 +54,11 @@ export { calculateNextReview }
 
 export async function getOrCreateTodayPractice(
   userId: string,
-  groupId?: string
+  groupId?: string,
+  timeZone = 'UTC'
 ): Promise<TodayPractice | null> {
-  const today = new Date().toISOString().slice(0, 10)
   const now = new Date()
+  const today = dayKeyInTimeZone(now, timeZone)
 
   const sessionWhere = groupId
     ? and(

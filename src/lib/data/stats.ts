@@ -6,6 +6,7 @@ import {
   vocabularyEntries,
   vocabularyReviewStats,
 } from '@/lib/db/schema'
+import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
 
 export type LearningStats = {
   totalVocabulary: number
@@ -30,10 +31,10 @@ export type LearningStats = {
 }
 
 export async function getLearningStats(
-  userId: string
+  userId: string,
+  timeZone = 'UTC'
 ): Promise<LearningStats> {
   const now = new Date()
-  const todayStr = now.toISOString().slice(0, 10)
 
   const totalVocabulary = await db
     .select({ count: sql<number>`count(*)` })
@@ -103,13 +104,14 @@ export async function getLearningStats(
     .sort((a, b) => a.accuracy - b.accuracy || b.totalReviews - a.totalReviews)
     .slice(0, 10)
 
-  // Recent activity: last 14 days
-  const days: { date: string; count: number }[] = []
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    days.push({ date: d.toISOString().slice(0, 10), count: 0 })
+  // Recent activity: last 14 days, in the user's timezone.
+  const dayKeys: string[] = []
+  let key = dayKeyInTimeZone(now, timeZone)
+  for (let i = 0; i < 14; i++) {
+    dayKeys.unshift(key)
+    key = previousDayKey(key)
   }
+  const days = dayKeys.map((date) => ({ date, count: 0 }))
 
   const sessions = await db
     .select({

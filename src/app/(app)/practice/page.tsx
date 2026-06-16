@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { requireUser } from '@/lib/session'
+import { getTimeZone } from '@/lib/timezone'
 import { isPro } from '@/lib/data/subscription'
 import { getOrCreateTodayPractice } from '@/lib/data/practice'
 import { getGroupWithVocabulary } from '@/lib/data/groups'
@@ -17,6 +18,7 @@ export default async function PracticePage({
 }) {
   const { group: groupId } = await searchParams
   const user = await requireUser()
+  const tz = await getTimeZone()
 
   if (groupId) {
     const pro = await isPro(user.id)
@@ -26,7 +28,7 @@ export default async function PracticePage({
   }
 
   const [today, groupData] = await Promise.all([
-    getOrCreateTodayPractice(user.id, groupId),
+    getOrCreateTodayPractice(user.id, groupId, tz),
     groupId ? getGroupWithVocabulary(groupId, user.id) : null,
   ])
 

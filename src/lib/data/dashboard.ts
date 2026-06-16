@@ -8,6 +8,7 @@ import {
   vocabularyEntries,
   vocabularyReviewStats,
 } from '@/lib/db/schema'
+import { startOfDayInTimeZone, endOfDayInTimeZone } from '@/lib/date'
 
 export type DuePreviewEntry = {
   id: string
@@ -50,11 +51,10 @@ export async function getDueWordsPreview(
   }))
 }
 
-export async function getDashboardSummary(userId: string) {
+export async function getDashboardSummary(userId: string, timeZone = 'UTC') {
   const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const todayEnd = new Date(todayStart)
-  todayEnd.setDate(todayEnd.getDate() + 1)
+  const todayStart = startOfDayInTimeZone(now, timeZone)
+  const todayEnd = endOfDayInTimeZone(now, timeZone)
 
   const totalVocabulary = await db
     .select({ count: sql<number>`count(*)` })

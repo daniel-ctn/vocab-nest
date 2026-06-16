@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { requireUser } from '@/lib/session'
+import { getTimeZone } from '@/lib/timezone'
 import { isPro } from '@/lib/data/subscription'
 import { getLearningStats } from '@/lib/data/stats'
+import { dayOfWeekFromKey } from '@/lib/date'
 import { ButtonLink } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
 import { Chapter } from '@/components/ui/chapter'
@@ -49,7 +51,8 @@ export default async function StatsPage() {
     )
   }
 
-  const stats = await getLearningStats(user.id)
+  const tz = await getTimeZone()
+  const stats = await getLearningStats(user.id, tz)
   const totalMastery = stats.masteryDistribution.reduce(
     (s, b) => s + b.count,
     0
@@ -160,8 +163,8 @@ export default async function StatsPage() {
         <div className="flex items-end gap-1.5 h-28">
           {stats.recentActivity.map((day) => {
             const pct = Math.round((day.count / maxActivity) * 100)
-            const dateObj = new Date(day.date)
-            const label = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`
+            const [, mm, dd] = day.date.split('-')
+            const label = `${Number(mm)}/${Number(dd)}`
             const hasActivity = day.count > 0
             return (
               <div
@@ -178,7 +181,7 @@ export default async function StatsPage() {
                   />
                 </div>
                 <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-tertiary">
-                  {dayLabels[dateObj.getDay()]}
+                  {dayLabels[dayOfWeekFromKey(day.date)]}
                 </span>
               </div>
             )

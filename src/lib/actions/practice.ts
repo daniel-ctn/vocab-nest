@@ -10,6 +10,8 @@ import {
   vocabularyReviewStats,
 } from '@/lib/db/schema'
 import { requireUser } from '@/lib/session'
+import { getTimeZone } from '@/lib/timezone'
+import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
 import { PracticeReviewRequestSchema } from '@/lib/contracts'
 import { calculateNextReview } from '@/lib/data/practice'
 
@@ -126,7 +128,8 @@ export async function completePractice(practiceId: string) {
   }
 
   const now = new Date()
-  const today = now.toISOString().slice(0, 10)
+  const tz = await getTimeZone()
+  const today = dayKeyInTimeZone(now, tz)
 
   await db
     .update(practiceSessions)
@@ -145,9 +148,7 @@ export async function completePractice(practiceId: string) {
     .then((rows) => Number(rows[0]?.count ?? 0))
 
   if (reviewedCountResult > 0) {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().slice(0, 10)
+    const yesterdayStr = previousDayKey(today)
 
     await db.transaction(async (tx) => {
       const stats = await tx

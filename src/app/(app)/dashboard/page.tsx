@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { requireUser } from '@/lib/session'
+import { getTimeZone } from '@/lib/timezone'
 import { getDashboardSummary, getDueWordsPreview } from '@/lib/data/dashboard'
 import { Caps } from '@/components/ui/caps'
 import { Chapter } from '@/components/ui/chapter'
@@ -24,8 +25,9 @@ function weekdayLabel() {
 
 export default async function DashboardPage() {
   const user = await requireUser()
+  const tz = await getTimeZone()
   const [stats, dueWords] = await Promise.all([
-    getDashboardSummary(user.id),
+    getDashboardSummary(user.id, tz),
     getDueWordsPreview(user.id, 3),
   ])
 
