@@ -10,15 +10,18 @@ import { Rule } from '@/components/ui/rule'
 import { Wordmark } from '@/components/ui/wordmark'
 
 export default function LandingPageClient() {
+  const year = new Date().getFullYear()
+
   return (
     <div className="flex min-h-dvh flex-col bg-cream">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6 sm:px-10">
+      {/* Running head */}
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 sm:px-10">
         <Wordmark size="md" />
-        <div className="flex items-center gap-5">
+        <nav className="flex items-center gap-5">
           <ThemeToggle className="inline-flex h-9 items-center gap-1.5 rounded-sm px-2 text-[13px] text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink" />
           <Link
             href="/login"
-            className="text-[13px] text-ink-secondary transition-colors hover:text-ink"
+            className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-secondary transition-colors hover:text-ink"
           >
             Sign in
           </Link>
@@ -26,59 +29,88 @@ export default function LandingPageClient() {
             Get started
             <ArrowRight size={13} />
           </ButtonLink>
-        </div>
+        </nav>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-16 sm:px-10">
-        <div className="space-y-10">
-          <Caps as="div">A vocabulary keeper, est. 2026</Caps>
-          <h1 className="font-display text-[44px] font-semibold leading-[1.02] tracking-tight text-ink sm:text-[68px] lg:text-[84px]">
-            Build your vocabulary,
+      <main className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-14 overflow-hidden px-6 py-12 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-16">
+        {/* Title page */}
+        <div className="space-y-8">
+          <Caps as="div" className="animate-fade-up text-accent">
+            Plate No. I — A keeper of words
+          </Caps>
+          <h1
+            className="animate-fade-up font-display text-[50px] font-semibold leading-[0.92] tracking-[-0.03em] text-ink sm:text-[72px] lg:text-[80px]"
+            style={{ animationDelay: '60ms' }}
+          >
+            Collect words
             <br />
-            <span className="italic">one word at a time.</span>
+            like a <span className="italic text-accent">naturalist</span>
+            <br />
+            keeps specimens.
           </h1>
-          <Rule animate />
-          <p className="max-w-xl font-display text-[19px] italic leading-relaxed text-ink-secondary">
-            A calm, deliberate space to collect words, organise them into
-            groups, and practise daily — kept like a commonplace book, not a
-            feed.
+          <p
+            className="animate-fade-up max-w-md font-display text-[19px] italic leading-relaxed text-ink-secondary"
+            style={{ animationDelay: '120ms' }}
+          >
+            A calm, deliberate place to gather vocabulary, bind it into groups,
+            and practise daily with spaced repetition — kept like a commonplace
+            book, not a feed.
           </p>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div
+            className="animate-fade-up flex flex-wrap items-center gap-x-6 gap-y-3"
+            style={{ animationDelay: '180ms' }}
+          >
             <ButtonLink href="/register" variant="primary" size="lg">
               Start your nest
               <ArrowRight size={14} />
             </ButtonLink>
             <Link
               href="/login"
-              className="text-[14px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[6px] hover:decoration-accent-hover"
+              className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink underline decoration-accent decoration-2 underline-offset-[6px] transition-colors hover:decoration-accent-hover"
             >
-              I already have an account
+              I have an account
             </Link>
           </div>
         </div>
 
-        {/* Specimen — show, don't tell */}
-        <div className="mt-20 max-w-2xl">
-          <Caps as="div" className="mb-4">
-            From the workshop
-          </Caps>
-          <Rule />
-          <div className="mt-6 grid grid-cols-[auto_1fr] items-baseline gap-x-6 gap-y-1">
-            <Marginalia>n.</Marginalia>
-            <h2 className="font-display text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+        {/* Dictionary specimen plate */}
+        <aside
+          className="animate-fade-up relative"
+          style={{ animationDelay: '260ms' }}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-20 select-none font-display text-[220px] font-semibold leading-none text-ink/[0.05] sm:text-[280px]"
+          >
+            S
+          </span>
+          <article className="leaf relative rounded-sm px-8 py-10 sm:px-10 sm:py-11">
+            <div className="flex items-baseline justify-between">
+              <Caps>Specimen</Caps>
+              <Caps className="text-ink-tertiary">fig. 1</Caps>
+            </div>
+            <Rule className="my-5" />
+            <h2 className="font-display text-[44px] font-semibold leading-none tracking-tight text-ink sm:text-[52px]">
               serendipity
             </h2>
-            <div />
-            <p className="font-display italic text-[18px] leading-snug text-ink-secondary sm:text-[20px]">
-              the occurrence of events by chance in a happy way.
+            <p className="mt-3 font-mono text-[12px] lowercase tracking-wide text-ink-tertiary">
+              /ˌsɛr.ənˈdɪp.ɪ.ti/ &middot; noun
             </p>
-          </div>
-        </div>
+            <p className="mt-5 font-display text-[21px] italic leading-snug text-ink">
+              the occurrence of events by chance, in a happy or beneficial way.
+            </p>
+            <Rule ornament className="my-6" />
+            <p className="font-sans text-[14px] leading-relaxed text-ink-secondary">
+              &ldquo;A stroke of serendipity brought the two old friends to the
+              same quiet café, years and a continent apart.&rdquo;
+            </p>
+          </article>
+        </aside>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-8 sm:px-10">
-        <Marginalia>© {new Date().getFullYear()} Vocab Nest</Marginalia>
-        <Marginalia>Made for the patient</Marginalia>
+      <footer className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8 sm:px-10">
+        <Marginalia>&copy; {year} Vocab Nest</Marginalia>
+        <Caps className="text-ink-tertiary">Est. MMXXVI &middot; Made for the patient</Caps>
       </footer>
     </div>
   )
