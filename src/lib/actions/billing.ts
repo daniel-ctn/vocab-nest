@@ -1,6 +1,9 @@
 'use server'
 
+import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { db } from '@/lib/db'
+import { subscriptions } from '@/lib/db/schema'
 import {
   getStripe,
   getStripePriceId,
@@ -114,14 +117,9 @@ export async function syncSubscription() {
     return { status: sub?.status ?? 'inactive' }
   }
 
-  const stripeSubResponse = await getStripe().subscriptions.retrieve(
+  const stripeSub = await getStripe().subscriptions.retrieve(
     sub.stripeSubscriptionId
   )
-  const stripeSub = stripeSubResponse as any
-
-  const { eq } = await import('drizzle-orm')
-  const { db } = await import('@/lib/db')
-  const { subscriptions } = await import('@/lib/db/schema')
 
   await db
     .update(subscriptions)
