@@ -1,17 +1,20 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Loader2, Upload, X } from 'lucide-react'
+import { Loader2, Sparkles, Upload, X } from 'lucide-react'
 import { bulkCreateVocabulary } from '@/lib/actions/vocabulary'
+import { aiBulkImport } from '@/lib/actions/ai'
 import { Button } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
 import { Marginalia } from '@/components/ui/marginalia'
 import { Rule } from '@/components/ui/rule'
 import { Textarea } from '@/components/ui/input'
+import { cn } from '@/lib/cn'
 
-export function BulkImport() {
+export function BulkImport({ aiEnabled }: { aiEnabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [raw, setRaw] = useState('')
+  const [useAi, setUseAi] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [result, setResult] = useState<{
     created: number
@@ -19,27 +22,28 @@ export function BulkImport() {
   } | null>(null)
 
   function handleImport() {
-    const lines = raw
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-
-    const entries = lines.map((line) => {
-      const parts = line.split('|').map((p) => p.trim())
-      const term = parts[0] ?? ''
-      const definition = parts[1] ?? ''
-      const tags = parts[2]
-        ? parts[2]
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : undefined
-      return { term, definition, tags }
-    })
-
     startTransition(async () => {
       try {
-        const res = await bulkCreateVocabulary(entries)
+        let res: { created: number; failed: number }
+        if (useAi) {
+          res = await aiBulkImport(raw)
+        } else {
+          const entries = raw
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .map((line) => {
+              const parts = line.split('|').map((p) => p.trim())
+              const tags = parts[2]
+                ? parts[2]
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean)
+                : undefined
+              return { term: parts[0] ?? '', definition: parts[1] ?? '', tags }
+            })
+          res = await bulkCreateVocabulary(entries)
+        }
         setResult(res)
         if (res.failed === 0) {
           setTimeout(() => {
@@ -48,8 +52,8 @@ export function BulkImport() {
             setResult(null)
           }, 1500)
         }
-      } catch {
-        alert('Import failed')
+      } catch (e) {
+        alert(e instanceof Error ? e.message : 'Import failed')
       }
     })
   }
@@ -81,11 +85,44 @@ export function BulkImport() {
         </button>
       </div>
       <Rule />
+
+      {aiEnabled && (
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setUseAi(false)}
+            className={cn(
+              'text-[12px] uppercase tracking-[0.14em] font-semibold transition-colors',
+              !useAi ? 'text-ink' : 'text-ink-tertiary hover:text-ink'
+            )}
+          >
+            Manual
+          </button>
+          <button
+            type="button"
+            onClick={() => setUseAi(true)}
+            className={cn(
+              'inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] font-semibold transition-colors',
+              useAi ? 'text-accent' : 'text-ink-tertiary hover:text-ink'
+            )}
+          >
+            <Sparkles size={12} />
+            AI structure
+          </button>
+        </div>
+      )}
+
       <Marginalia>
-        Paste one word per line. Format:{' '}
-        <code className="font-mono text-[12px] not-italic text-ink">
-          term | definition | tag1, tag2
-        </code>
+        {useAi ? (
+          <>Paste any text or messy list — AI will pull out terms and write definitions.</>
+        ) : (
+          <>
+            Paste one word per line. Format:{' '}
+            <code className="font-mono text-[12px] not-italic text-ink">
+              term | definition | tag1, tag2
+            </code>
+          </>
+        )}
       </Marginalia>
 
       <Textarea
@@ -93,7 +130,11 @@ export function BulkImport() {
         value={raw}
         maxLength={10_000}
         onChange={(e) => setRaw(e.target.value)}
-        placeholder={`serendipity | a happy accident | english, advanced\nephemeral | lasting for a very short time | english\nmellifluous | sweet or musical | english`}
+        placeholder={
+          useAi
+            ? 'Paste a paragraph, a glossary, or a rough list of words…'
+            : `serendipity | a happy accident | english, advanced\nephemeral | lasting for a very short time | english\nmellifluous | sweet or musical | english`
+        }
         className="font-mono text-[13px] placeholder:font-mono placeholder:not-italic"
       />
 

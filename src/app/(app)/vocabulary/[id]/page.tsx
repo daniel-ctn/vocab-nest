@@ -63,6 +63,11 @@ export default async function VocabularyDetailPage({
             className="mb-2 -ml-1 inline-flex h-9 w-9 items-center justify-center rounded-sm text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink"
           />
         </div>
+        {entry.pronunciation && (
+          <p className="font-mono text-[13px] lowercase tracking-wide text-ink-tertiary">
+            {entry.pronunciation}
+          </p>
+        )}
         <Rule animate />
         <div className="flex items-center justify-between gap-3">
           <Marginalia>
@@ -104,6 +109,58 @@ export default async function VocabularyDetailPage({
               </li>
             ))}
           </ol>
+        </section>
+      )}
+
+      {/* Synonyms & antonyms */}
+      {(entry.synonyms.length > 0 || entry.antonyms.length > 0) && (
+        <section className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          {entry.synonyms.length > 0 && (
+            <div className="space-y-3">
+              <Caps as="div">Synonyms</Caps>
+              <p className="font-display text-[16px] italic leading-relaxed text-ink">
+                {entry.synonyms.join(', ')}
+              </p>
+            </div>
+          )}
+          {entry.antonyms.length > 0 && (
+            <div className="space-y-3">
+              <Caps as="div">Antonyms</Caps>
+              <p className="font-display text-[16px] italic leading-relaxed text-ink">
+                {entry.antonyms.join(', ')}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Etymology */}
+      {entry.etymology && (
+        <section className="space-y-3">
+          <Caps as="div">Etymology</Caps>
+          <p className="font-display text-[16px] italic leading-relaxed text-ink-secondary">
+            {entry.etymology}
+          </p>
+        </section>
+      )}
+
+      {/* Mnemonic */}
+      {entry.mnemonic && (
+        <section className="space-y-3">
+          <Caps as="div">Mnemonic</Caps>
+          <p className="text-[15px] leading-relaxed text-ink">
+            {entry.mnemonic}
+          </p>
+        </section>
+      )}
+
+      {/* Notes */}
+      {entry.notes && (
+        <section className="space-y-3">
+          <Caps as="div">Notes</Caps>
+          <p className="text-[15px] leading-relaxed text-ink-secondary">
+            {entry.notes}
+          </p>
         </section>
       )}
 

@@ -1,7 +1,16 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { Volume2 } from 'lucide-react'
+
+const noopSubscribe = () => () => {}
+function useSpeechSupported() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => 'speechSynthesis' in window,
+    () => false
+  )
+}
 
 export function SpeakButton({
   text,
@@ -13,9 +22,10 @@ export function SpeakButton({
   className?: string
 }) {
   const [speaking, setSpeaking] = useState(false)
+  const supported = useSpeechSupported()
 
   const handleSpeak = useCallback(() => {
-    if (!('speechSynthesis' in window)) return
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
 
     window.speechSynthesis.cancel()
 
@@ -36,7 +46,7 @@ export function SpeakButton({
     }
   }, [])
 
-  if (!('speechSynthesis' in window)) return null
+  if (!supported) return null
 
   return (
     <button

@@ -11,9 +11,31 @@ import {
 } from '@/lib/db/schema'
 import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
+import { isPro } from '@/lib/data/subscription'
 import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
 import { PracticeReviewRequestSchema } from '@/lib/contracts'
-import { calculateNextReview } from '@/lib/data/practice'
+import {
+  calculateNextReview,
+  startTodayPractice,
+  type ReviewGrade,
+} from '@/lib/data/practice'
+
+/**
+ * Creates today's practice session on an explicit user action (the "Start"
+ * button). Kept out of the page's GET so a Next.js prefetch can't create a
+ * session before the user means to practice.
+ */
+export async function startPractice(groupId?: string) {
+  const user = await requireUser()
+  if (groupId) {
+    const pro = await isPro(user.id)
+    if (!pro) throw new Error('Practice by group is a Pro feature.')
+  }
+  const tz = await getTimeZone()
+  await startTodayPractice(user.id, groupId || undefined, tz)
+  revalidatePath('/practice')
+  if (groupId) revalidatePath(`/practice?group=${groupId}`)
+}
 
 export async function reviewPracticeItem(
   practiceId: string,
@@ -56,12 +78,15 @@ export async function reviewPracticeItem(
   }
 
   const now = new Date()
+  const grade = data.grade as ReviewGrade
+  const remembered = grade >= 2
 
   await db
     .update(practiceItems)
     .set({
       reviewedAt: now,
-      remembered: data.remembered,
+      remembered,
+      grade,
       answer: data.answer ?? null,
     })
     .where(eq(practiceItems.id, itemId))
@@ -80,7 +105,7 @@ export async function reviewPracticeItem(
     .then((rows) => rows[0])
 
   if (statsRow) {
-    const next = calculateNextReview(data.remembered, {
+    const next = calculateNextReview(grade, {
       intervalDays: statsRow.intervalDays,
       easeFactor: statsRow.easeFactor,
       consecutiveCorrect: statsRow.consecutiveCorrect,
@@ -97,7 +122,7 @@ export async function reviewPracticeItem(
         easeFactor: next.easeFactor,
         consecutiveCorrect: next.consecutiveCorrect,
         totalReviews: statsRow.totalReviews + 1,
-        totalCorrect: statsRow.totalCorrect + (data.remembered ? 1 : 0),
+        totalCorrect: statsRow.totalCorrect + (remembered ? 1 : 0),
         updatedAt: now,
       })
       .where(eq(vocabularyReviewStats.vocabularyId, item.vocabularyId))
@@ -149,6 +174,7 @@ export async function completePractice(practiceId: string) {
 
   if (reviewedCountResult > 0) {
     const yesterdayStr = previousDayKey(today)
+    const dayBeforeStr = previousDayKey(yesterdayStr)
 
     await db.transaction(async (tx) => {
       const stats = await tx
@@ -161,15 +187,27 @@ export async function completePractice(practiceId: string) {
       if (!stats) return
 
       let streak = stats.streakDays
-      if (stats.lastPracticeDate === yesterdayStr) {
+      let freezes = stats.streakFreezes
+      if (stats.lastPracticeDate === today) {
+        // Already practiced today — keep the streak unchanged.
+      } else if (stats.lastPracticeDate === yesterdayStr) {
         streak += 1
-      } else if (stats.lastPracticeDate !== today) {
+      } else if (stats.lastPracticeDate === dayBeforeStr && freezes > 0) {
+        // Missed exactly one day — spend a freeze to keep the streak alive.
+        streak += 1
+        freezes -= 1
+      } else {
         streak = 1
       }
 
       await tx
         .update(userStats)
-        .set({ streakDays: streak, lastPracticeDate: today })
+        .set({
+          streakDays: streak,
+          longestStreak: Math.max(stats.longestStreak, streak),
+          streakFreezes: freezes,
+          lastPracticeDate: today,
+        })
         .where(eq(userStats.userId, user.id))
     })
   }

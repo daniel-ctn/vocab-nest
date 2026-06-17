@@ -3,6 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { dash } from '@better-auth/infra'
 import { db } from '@/lib/db'
 import * as schema from '@/lib/db/schema'
+import { sendEmail } from '@/lib/email'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -13,11 +14,29 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {
-      // TODO: Integrate email provider (Resend, SendGrid, AWS SES)
-      // to send the reset link. The URL contains a one-time token.
-      // Do not log this URL in production.
-      void user
-      void url
+      // The URL contains a one-time token — never log it in production.
+      await sendEmail({
+        to: user.email,
+        subject: 'Reset your Vocab Nest password',
+        text: `Reset your password using this link: ${url}\n\nIf you didn't request this, you can safely ignore this email.`,
+        html: `
+          <div style="font-family: Georgia, 'Times New Roman', serif; color: #211a10; max-width: 480px; margin: 0 auto;">
+            <h1 style="font-size: 22px; font-weight: 600;">Reset your password</h1>
+            <p style="font-size: 15px; line-height: 1.6; color: #6a5f4c;">
+              We received a request to reset your Vocab Nest password. Click the
+              button below to choose a new one. This link expires shortly.
+            </p>
+            <p style="margin: 28px 0;">
+              <a href="${url}" style="background: #211a10; color: #f7f2e7; text-decoration: none; padding: 12px 22px; font-size: 14px; border-radius: 2px; display: inline-block;">
+                Reset password
+              </a>
+            </p>
+            <p style="font-size: 13px; line-height: 1.6; color: #9a8f79;">
+              If you didn't request this, you can safely ignore this email.
+            </p>
+          </div>
+        `,
+      })
     },
   },
   socialProviders: {

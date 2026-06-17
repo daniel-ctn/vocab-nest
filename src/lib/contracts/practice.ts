@@ -18,7 +18,7 @@ export const PracticeSessionSchema = z.object({
 })
 
 export const PracticeReviewRequestSchema = z.object({
-  remembered: z.boolean(),
+  grade: z.number().int().min(0).max(3),
   answer: z.string().min(1).optional(),
 })
 

@@ -1,6 +1,7 @@
 import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
 import { isPro } from '@/lib/data/subscription'
+import { isAiConfigured } from '@/lib/ai/gemini'
 import { getDashboardSummary } from '@/lib/data/dashboard'
 import { listVocabulary } from '@/lib/data/vocabulary'
 import { VocabularyList } from './vocabulary-list'
@@ -32,7 +33,7 @@ export default async function VocabularyPage({
         atLimit={atLimit}
         isPro={pro}
       />
-      {pro && <BulkImport />}
+      {pro && <BulkImport aiEnabled={isAiConfigured()} />}
     </div>
   )
 }

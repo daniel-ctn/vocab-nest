@@ -3,15 +3,17 @@ import { db } from '@/lib/db'
 import {
   practiceItems,
   practiceSessions,
+  userStats,
   vocabularyEntries,
   vocabularyReviewStats,
 } from '@/lib/db/schema'
-import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
+import { dayKeyInTimeZone, nextDayKey, previousDayKey } from '@/lib/date'
 
 export type LearningStats = {
   totalVocabulary: number
   dueToday: number
   overallAccuracy: number
+  longestStreak: number
   masteryDistribution: {
     label: string
     count: number
@@ -27,6 +29,22 @@ export type LearningStats = {
   recentActivity: {
     date: string
     count: number
+  }[]
+  /** ~16 weeks of daily review counts for a calendar heatmap. */
+  heatmap: {
+    date: string
+    count: number
+  }[]
+  /** Upcoming review load. */
+  forecast: {
+    dueIn7: number
+    dueIn30: number
+    upcoming: { date: string; count: number }[]
+  }
+  achievements: {
+    label: string
+    achieved: boolean
+    hint: string
   }[]
 }
 
@@ -63,6 +81,7 @@ export async function getLearningStats(
       totalCorrect: vocabularyReviewStats.totalCorrect,
       intervalDays: vocabularyReviewStats.intervalDays,
       easeFactor: vocabularyReviewStats.easeFactor,
+      nextReviewAt: vocabularyReviewStats.nextReviewAt,
       vocabularyId: vocabularyReviewStats.vocabularyId,
       term: vocabularyEntries.term,
       definition: vocabularyEntries.definition,
@@ -104,14 +123,14 @@ export async function getLearningStats(
     .sort((a, b) => a.accuracy - b.accuracy || b.totalReviews - a.totalReviews)
     .slice(0, 10)
 
-  // Recent activity: last 14 days, in the user's timezone.
-  const dayKeys: string[] = []
-  let key = dayKeyInTimeZone(now, timeZone)
-  for (let i = 0; i < 14; i++) {
-    dayKeys.unshift(key)
-    key = previousDayKey(key)
+  // Activity heatmap: last 16 weeks, in the user's timezone.
+  const HEATMAP_DAYS = 112
+  const heatKeys: string[] = []
+  let hk = dayKeyInTimeZone(now, timeZone)
+  for (let i = 0; i < HEATMAP_DAYS; i++) {
+    heatKeys.unshift(hk)
+    hk = previousDayKey(hk)
   }
-  const days = dayKeys.map((date) => ({ date, count: 0 }))
 
   const sessions = await db
     .select({
@@ -126,21 +145,100 @@ export async function getLearningStats(
     .where(
       and(
         eq(practiceSessions.userId, userId),
-        gte(practiceSessions.date, days[0].date)
+        gte(practiceSessions.date, heatKeys[0])
       )
     )
     .groupBy(practiceSessions.date)
 
   const sessionMap = new Map(sessions.map((s) => [s.date, Number(s.count)]))
-  const recentActivity = days.map((d) => ({
-    date: d.date,
-    count: sessionMap.get(d.date) ?? 0,
+  const heatmap = heatKeys.map((date) => ({
+    date,
+    count: sessionMap.get(date) ?? 0,
   }))
+  const recentActivity = heatmap.slice(-14)
+
+  // Review-load forecast from each card's next review date.
+  const in7 = new Date(now.getTime() + 7 * 86_400_000)
+  const in30 = new Date(now.getTime() + 30 * 86_400_000)
+  let dueIn7 = 0
+  let dueIn30 = 0
+  const upcomingKeys: string[] = []
+  let uk = dayKeyInTimeZone(now, timeZone)
+  for (let i = 0; i < 14; i++) {
+    upcomingKeys.push(uk)
+    uk = nextDayKey(uk)
+  }
+  const upcomingMap = new Map(upcomingKeys.map((k) => [k, 0]))
+  for (const r of allStats) {
+    const at = r.nextReviewAt
+    if (at <= in7) dueIn7++
+    if (at <= in30) dueIn30++
+    // Overdue cards count toward today.
+    const k = dayKeyInTimeZone(at < now ? now : at, timeZone)
+    if (upcomingMap.has(k)) upcomingMap.set(k, (upcomingMap.get(k) ?? 0) + 1)
+  }
+  const upcoming = upcomingKeys.map((date) => ({
+    date,
+    count: upcomingMap.get(date) ?? 0,
+  }))
+
+  // Streak + achievements (computed on read, no extra tables).
+  const streakRow = await db
+    .select({ longestStreak: userStats.longestStreak })
+    .from(userStats)
+    .where(eq(userStats.userId, userId))
+    .limit(1)
+    .then((rows) => rows[0])
+  const longestStreak = streakRow?.longestStreak ?? 0
+
+  const achievements = [
+    {
+      label: 'First word',
+      achieved: totalVocabulary >= 1,
+      hint: 'Collect your first word',
+    },
+    {
+      label: 'Ten words',
+      achieved: totalVocabulary >= 10,
+      hint: '10 words collected',
+    },
+    {
+      label: 'A hundred',
+      achieved: totalVocabulary >= 100,
+      hint: '100 words collected',
+    },
+    {
+      label: 'Week streak',
+      achieved: longestStreak >= 7,
+      hint: 'A 7-day streak',
+    },
+    {
+      label: 'Month streak',
+      achieved: longestStreak >= 30,
+      hint: 'A 30-day streak',
+    },
+    {
+      label: 'Sharp eye',
+      achieved: totalReviews >= 20 && overallAccuracy >= 90,
+      hint: '90% accuracy over 20+ reviews',
+    },
+    {
+      label: 'Rooted',
+      achieved: masteredCount >= 10,
+      hint: '10 words mastered',
+    },
+    {
+      label: 'All caught up',
+      achieved: totalVocabulary > 0 && dueToday === 0,
+      hint: 'No words due for review',
+    },
+  ]
 
   return {
     totalVocabulary,
     dueToday,
     overallAccuracy,
+    longestStreak,
     masteryDistribution: [
       { label: 'New', count: newCount, color: 'bg-error' },
       { label: 'Learning', count: learningCount, color: 'bg-warning' },
@@ -149,5 +247,8 @@ export async function getLearningStats(
     ],
     weakWords,
     recentActivity,
+    heatmap,
+    forecast: { dueIn7, dueIn30, upcoming },
+    achievements,
   }
 }

@@ -73,7 +73,13 @@ export const vocabularyEntries = pgTable(
     definition: text('definition').notNull(),
     language: text('language'),
     partOfSpeech: text('part_of_speech'),
+    pronunciation: text('pronunciation'),
+    notes: text('notes'),
+    etymology: text('etymology'),
+    mnemonic: text('mnemonic'),
     examples: jsonb('examples').$type<string[]>().notNull().default([]),
+    synonyms: jsonb('synonyms').$type<string[]>().notNull().default([]),
+    antonyms: jsonb('antonyms').$type<string[]>().notNull().default([]),
     tags: jsonb('tags').$type<string[]>().notNull().default([]),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -152,6 +158,7 @@ export const practiceItems = pgTable(
     dueAt: timestamp('due_at').notNull(),
     reviewedAt: timestamp('reviewed_at'),
     remembered: boolean('remembered'),
+    grade: integer('grade'),
     answer: text('answer'),
   },
   (t) => [
@@ -167,8 +174,12 @@ export const userStats = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: 'cascade' }),
     streakDays: integer('streak_days').notNull().default(0),
+    longestStreak: integer('longest_streak').notNull().default(0),
+    streakFreezes: integer('streak_freezes').notNull().default(2),
     lastPracticeDate: text('last_practice_date'),
     dailyGoal: integer('daily_goal').notNull().default(10),
+    emailReminders: boolean('email_reminders').notNull().default(true),
+    reminderHour: integer('reminder_hour').notNull().default(9),
   },
   (t) => [index('user_stats_user_idx').on(t.userId)]
 )

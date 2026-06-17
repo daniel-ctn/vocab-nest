@@ -4,7 +4,6 @@ import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
 import { isPro } from '@/lib/data/subscription'
 import { getLearningStats } from '@/lib/data/stats'
-import { dayOfWeekFromKey } from '@/lib/date'
 import { ButtonLink } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
 import { Chapter } from '@/components/ui/chapter'
@@ -28,6 +27,13 @@ const TIER_INTENSITY = [
   'bg-ink/60',
   'bg-ink',
 ] as const
+
+function heatClass(count: number): string {
+  if (count <= 0) return 'bg-rule/40'
+  if (count <= 2) return 'bg-ink/25'
+  if (count <= 5) return 'bg-ink/50'
+  return 'bg-ink'
+}
 
 export default async function StatsPage() {
   const user = await requireUser()
@@ -57,8 +63,8 @@ export default async function StatsPage() {
     (s, b) => s + b.count,
     0
   )
-  const maxActivity = Math.max(...stats.recentActivity.map((d) => d.count), 1)
-  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  const maxUpcoming = Math.max(...stats.forecast.upcoming.map((d) => d.count), 1)
+  const unlocked = stats.achievements.filter((a) => a.achieved).length
 
   return (
     <div className="space-y-12">
@@ -156,36 +162,101 @@ export default async function StatsPage() {
         )}
       </section>
 
-      {/* Recent activity */}
+      {/* Activity heatmap — 16 weeks */}
       <section className="space-y-5">
-        <Caps as="div">Recent activity</Caps>
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">Activity</Caps>
+          <span className="font-display text-[13px] italic text-ink-tertiary">
+            last 16 weeks
+          </span>
+        </div>
         <Rule />
-        <div className="flex items-end gap-1.5 h-28">
-          {stats.recentActivity.map((day) => {
-            const pct = Math.round((day.count / maxActivity) * 100)
+        <div
+          className="grid grid-flow-col grid-rows-7 gap-[3px]"
+          role="img"
+          aria-label="Daily review activity over the last 16 weeks"
+        >
+          {stats.heatmap.map((day) => (
+            <div
+              key={day.date}
+              className={`h-3 w-3 rounded-[2px] ${heatClass(day.count)}`}
+              title={`${day.date}: ${day.count} review${day.count !== 1 ? 's' : ''}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Review forecast */}
+      <section className="space-y-5">
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">Review forecast</Caps>
+          <span className="font-display text-[13px] italic text-ink-tertiary">
+            {stats.forecast.dueIn7} due this week · {stats.forecast.dueIn30} this
+            month
+          </span>
+        </div>
+        <Rule />
+        <div className="flex items-end gap-1.5 h-24">
+          {stats.forecast.upcoming.map((day, i) => {
+            const pct = Math.round((day.count / maxUpcoming) * 100)
             const [, mm, dd] = day.date.split('-')
-            const label = `${Number(mm)}/${Number(dd)}`
-            const hasActivity = day.count > 0
             return (
               <div
                 key={day.date}
                 className="flex flex-1 flex-col items-center gap-2"
-                title={`${label}: ${day.count} review${day.count !== 1 ? 's' : ''}`}
+                title={`${Number(mm)}/${Number(dd)}: ${day.count} due`}
               >
                 <div className="relative w-full flex-1 bg-rule">
                   <div
                     className={`absolute bottom-0 left-0 right-0 transition-all ${
-                      hasActivity ? 'bg-ink' : 'bg-transparent'
+                      i === 0 ? 'bg-accent' : 'bg-ink'
                     }`}
-                    style={{ height: `${pct}%` }}
+                    style={{ height: `${Math.max(pct, day.count > 0 ? 6 : 0)}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-ink-tertiary">
-                  {dayLabels[dayOfWeekFromKey(day.date)]}
+                <span className="font-display text-[10px] italic tabular-nums text-ink-tertiary">
+                  {Number(dd)}
                 </span>
               </div>
             )
           })}
+        </div>
+        <Marginalia>Words coming due over the next two weeks.</Marginalia>
+      </section>
+
+      {/* Milestones */}
+      <section className="space-y-5">
+        <div className="flex items-baseline justify-between">
+          <Caps as="div">Milestones</Caps>
+          <span className="font-display text-[13px] italic text-ink-tertiary">
+            {unlocked} of {stats.achievements.length}
+          </span>
+        </div>
+        <Rule />
+        <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+          {stats.achievements.map((a) => (
+            <div
+              key={a.label}
+              className="flex items-baseline gap-2"
+              title={a.hint}
+            >
+              <span
+                aria-hidden
+                className={`inline-block h-2 w-2 rounded-full ${
+                  a.achieved ? 'bg-accent' : 'bg-rule'
+                }`}
+              />
+              <span
+                className={
+                  a.achieved
+                    ? 'text-[13px] font-medium text-ink'
+                    : 'text-[13px] text-ink-tertiary'
+                }
+              >
+                {a.label}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
 
