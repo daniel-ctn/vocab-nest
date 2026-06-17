@@ -62,7 +62,11 @@ export async function reviewPracticeItem(
   }
 
   const item = await db
-    .select({ id: practiceItems.id, vocabularyId: practiceItems.vocabularyId })
+    .select({
+      id: practiceItems.id,
+      vocabularyId: practiceItems.vocabularyId,
+      reviewedAt: practiceItems.reviewedAt,
+    })
     .from(practiceItems)
     .where(
       and(
@@ -75,6 +79,12 @@ export async function reviewPracticeItem(
 
   if (!item) {
     throw new Error('Practice item not found.')
+  }
+
+  // Idempotent: a duplicate/retried submit for an already-reviewed item must
+  // not double-count stats or advance the SRS interval a second time.
+  if (item.reviewedAt) {
+    return
   }
 
   const now = new Date()
