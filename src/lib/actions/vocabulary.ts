@@ -210,8 +210,27 @@ export async function bulkCreateVocabulary(
     return { created: 0, failed: entries.length }
   }
 
+  // Enforce the free-plan word cap here too — otherwise bulk/AI import would
+  // let free users bypass the limit that createVocabulary applies one-by-one.
+  let toImport = validEntries
+  const pro = await isPro(user.id)
+  if (!pro) {
+    const count = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(vocabularyEntries)
+      .where(eq(vocabularyEntries.userId, user.id))
+      .then((rows) => Number(rows[0]?.count ?? 0))
+    const remaining = FREE_WORD_LIMIT - count
+    if (remaining <= 0) {
+      throw new Error(
+        'Free plan limit reached. Upgrade to Pro for unlimited vocabulary.'
+      )
+    }
+    toImport = validEntries.slice(0, remaining)
+  }
+
   const created = await db.transaction(async (tx) => {
-    const vocabRows = validEntries.map((entry) => ({
+    const vocabRows = toImport.map((entry) => ({
       id: crypto.randomUUID(),
       userId: user.id,
       term: entry.term.trim(),
