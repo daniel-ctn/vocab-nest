@@ -11,9 +11,31 @@ import {
 } from '@/lib/db/schema'
 import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
+import { isPro } from '@/lib/data/subscription'
 import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
 import { PracticeReviewRequestSchema } from '@/lib/contracts'
-import { calculateNextReview, type ReviewGrade } from '@/lib/data/practice'
+import {
+  calculateNextReview,
+  startTodayPractice,
+  type ReviewGrade,
+} from '@/lib/data/practice'
+
+/**
+ * Creates today's practice session on an explicit user action (the "Start"
+ * button). Kept out of the page's GET so a Next.js prefetch can't create a
+ * session before the user means to practice.
+ */
+export async function startPractice(groupId?: string) {
+  const user = await requireUser()
+  if (groupId) {
+    const pro = await isPro(user.id)
+    if (!pro) throw new Error('Practice by group is a Pro feature.')
+  }
+  const tz = await getTimeZone()
+  await startTodayPractice(user.id, groupId || undefined, tz)
+  revalidatePath('/practice')
+  if (groupId) revalidatePath(`/practice?group=${groupId}`)
+}
 
 export async function reviewPracticeItem(
   practiceId: string,
