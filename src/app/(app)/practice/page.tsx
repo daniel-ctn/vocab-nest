@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
 import { isPro } from '@/lib/data/subscription'
+import { isAiConfigured } from '@/lib/ai/gemini'
 import { getOrCreateTodayPractice } from '@/lib/data/practice'
 import { getGroupWithVocabulary } from '@/lib/data/groups'
 import { ButtonLink } from '@/components/ui/button'
@@ -19,13 +20,13 @@ export default async function PracticePage({
   const { group: groupId } = await searchParams
   const user = await requireUser()
   const tz = await getTimeZone()
+  const pro = await isPro(user.id)
 
-  if (groupId) {
-    const pro = await isPro(user.id)
-    if (!pro) {
-      redirect('/upgrade')
-    }
+  if (groupId && !pro) {
+    redirect('/upgrade')
   }
+
+  const aiGrading = pro && isAiConfigured()
 
   const [today, groupData] = await Promise.all([
     getOrCreateTodayPractice(user.id, groupId, tz),
@@ -74,6 +75,7 @@ export default async function PracticePage({
         session={today.session}
         definitions={today.definitions}
         pool={today.pool}
+        aiGrading={aiGrading}
       />
     </div>
   )

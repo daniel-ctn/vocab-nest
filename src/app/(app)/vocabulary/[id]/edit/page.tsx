@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/session'
+import { isPro } from '@/lib/data/subscription'
+import { isAiConfigured } from '@/lib/ai/gemini'
 import { getVocabularyWithGroups } from '@/lib/data/vocabulary'
 import { listGroups } from '@/lib/data/groups'
 import { Caps } from '@/components/ui/caps'
@@ -21,7 +23,8 @@ export default async function VocabularyEditPage({
   }
 
   const { entry, groupIds } = data
-  const groups = await listGroups(user.id)
+  const [groups, pro] = await Promise.all([listGroups(user.id), isPro(user.id)])
+  const canUseAi = isAiConfigured() && pro
 
   return (
     <div className="space-y-12">
@@ -29,6 +32,7 @@ export default async function VocabularyEditPage({
         mode="edit"
         entry={entry}
         extraActions={<DeleteVocabularyButton id={entry.id} />}
+        canUseAi={canUseAi}
       />
 
       <section className="space-y-4">

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@better-auth/infra": "^0.2.6",
+    "@google/genai": "^2.8.0",
     "@nanostores/react": "^1.1.0",
     "@tailwindcss/postcss": "^4.3.0",
     "bcryptjs": "^3.0.2",

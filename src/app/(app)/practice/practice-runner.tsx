@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Sparkles } from 'lucide-react'
 import { completePractice, reviewPracticeItem } from '@/lib/actions/practice'
+import { gradeTypedAnswer } from '@/lib/actions/ai'
 import { SpeakButton } from '@/components/speak-button'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
@@ -43,10 +44,12 @@ export function PracticeRunner({
   session,
   definitions,
   pool,
+  aiGrading,
 }: {
   session: PracticeSession
   definitions: Record<string, string>
   pool: { term: string; definition: string }[]
+  aiGrading?: boolean
 }) {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('flashcard')
@@ -57,6 +60,11 @@ export function PracticeRunner({
   const [completed, setCompleted] = useState(false)
   const [kept, setKept] = useState(0)
   const [isPending, startTransition] = useTransition()
+  const [aiFeedback, setAiFeedback] = useState<{
+    score: number
+    feedback: string
+  } | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const item = session.items[currentIndex]
   const definition = item ? (definitions[item.vocabularyId] ?? '') : ''
@@ -74,6 +82,19 @@ export function PracticeRunner({
     setRevealed(false)
     setTypedAnswer('')
     setPicked(null)
+    setAiFeedback(null)
+    setAiLoading(false)
+  }
+
+  // Reveal the typed answer, optionally grading it with AI.
+  function revealTyped() {
+    setRevealed(true)
+    if (!aiGrading || !item || !typedAnswer.trim()) return
+    setAiLoading(true)
+    gradeTypedAnswer(item.vocabularyId, typedAnswer.trim())
+      .then((g) => setAiFeedback({ score: g.score, feedback: g.feedback }))
+      .catch(() => setAiFeedback(null))
+      .finally(() => setAiLoading(false))
   }
 
   const submitGrade = useCallback(
@@ -287,7 +308,7 @@ export function PracticeRunner({
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                setRevealed(true)
+                revealTyped()
               }}
               className="space-y-4"
             >
@@ -363,6 +384,20 @@ export function PracticeRunner({
                   <span className="text-ink-secondary">{typedAnswer.trim()}</span>
                 </p>
               )}
+              {mode === 'typed' && (aiLoading || aiFeedback) && (
+                <p className="flex items-center gap-2 font-display text-[14px] italic text-ink-secondary">
+                  {aiLoading ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" /> Grading…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={13} className="text-accent" />
+                      {aiFeedback?.feedback}
+                    </>
+                  )}
+                </p>
+              )}
               <Rule />
               <div className="grid grid-cols-4 gap-2">
                 {GRADES.map((g) => (
@@ -372,7 +407,11 @@ export function PracticeRunner({
                     disabled={isPending}
                     variant={g.grade === 2 ? 'primary' : g.grade === 3 ? 'accent' : 'outline'}
                     size="sm"
-                    className="flex-col gap-0.5 py-2"
+                    className={cn(
+                      'flex-col gap-0.5 py-2',
+                      aiFeedback?.score === g.grade &&
+                        'ring-2 ring-accent ring-offset-1 ring-offset-surface'
+                    )}
                   >
                     {isPending ? (
                       <Loader2 size={13} className="animate-spin" />

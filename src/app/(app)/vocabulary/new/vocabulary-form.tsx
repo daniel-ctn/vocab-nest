@@ -2,8 +2,9 @@
 
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Plus, X } from 'lucide-react'
+import { ArrowLeft, Loader2, Plus, Sparkles, X } from 'lucide-react'
 import { createVocabulary, updateVocabulary } from '@/lib/actions/vocabulary'
+import { enrichVocabulary } from '@/lib/actions/ai'
 import { Button } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
 import { Chapter } from '@/components/ui/chapter'
@@ -153,12 +154,14 @@ type VocabularyFormProps = {
   mode: 'create' | 'edit'
   entry?: VocabularyEntry
   extraActions?: ReactNode
+  canUseAi?: boolean
 }
 
 export function VocabularyForm({
   mode,
   entry,
   extraActions,
+  canUseAi,
 }: VocabularyFormProps) {
   const router = useRouter()
   const [term, setTerm] = useState(entry?.term ?? '')
@@ -174,6 +177,36 @@ export function VocabularyForm({
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [tags, setTags] = useState<string[]>(entry?.tags ?? [])
   const [isPending, startTransition] = useTransition()
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+
+  function handleAutofill() {
+    const t = term.trim()
+    if (!t || aiLoading) return
+    setAiError(null)
+    setAiLoading(true)
+    enrichVocabulary(t, language.trim() || undefined)
+      .then((d) => {
+        // Only fill fields the user hasn't already written.
+        if (!definition.trim() && d.definition) setDefinition(d.definition)
+        if (!partOfSpeech.trim() && d.partOfSpeech)
+          setPartOfSpeech(d.partOfSpeech)
+        if (!pronunciation.trim() && d.pronunciation)
+          setPronunciation(d.pronunciation)
+        if (examples.length === 0 && d.examples.length > 0)
+          setExamples(d.examples)
+        if (synonyms.length === 0 && d.synonyms.length > 0)
+          setSynonyms(d.synonyms)
+        if (antonyms.length === 0 && d.antonyms.length > 0)
+          setAntonyms(d.antonyms)
+        if (!etymology.trim() && d.etymology) setEtymology(d.etymology)
+        if (!mnemonic.trim() && d.mnemonic) setMnemonic(d.mnemonic)
+      })
+      .catch((e) =>
+        setAiError(e instanceof Error ? e.message : 'Auto-fill failed.')
+      )
+      .finally(() => setAiLoading(false))
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -235,6 +268,28 @@ export function VocabularyForm({
             placeholder="e.g., Serendipity"
             className="text-[22px] font-display font-semibold placeholder:font-display placeholder:not-italic placeholder:text-ink-tertiary"
           />
+          {canUseAi && (
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleAutofill}
+                disabled={!term.trim() || aiLoading}
+                className="inline-flex items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] font-semibold text-accent transition-opacity hover:opacity-80 disabled:opacity-40"
+              >
+                {aiLoading ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Sparkles size={13} />
+                )}
+                Auto-fill with AI
+              </button>
+              {aiError && (
+                <span className="font-display text-[12px] italic text-error">
+                  {aiError}
+                </span>
+              )}
+            </div>
+          )}
         </Field>
 
         <Field>
