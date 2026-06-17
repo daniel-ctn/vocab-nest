@@ -174,8 +174,12 @@ export const userStats = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: 'cascade' }),
     streakDays: integer('streak_days').notNull().default(0),
+    longestStreak: integer('longest_streak').notNull().default(0),
+    streakFreezes: integer('streak_freezes').notNull().default(2),
     lastPracticeDate: text('last_practice_date'),
     dailyGoal: integer('daily_goal').notNull().default(10),
+    emailReminders: boolean('email_reminders').notNull().default(true),
+    reminderHour: integer('reminder_hour').notNull().default(9),
   },
   (t) => [index('user_stats_user_idx').on(t.userId)]
 )

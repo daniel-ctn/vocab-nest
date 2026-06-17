@@ -29,6 +29,13 @@
       "when": 1781684934527,
       "tag": "0003_orange_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781686381336,
+      "tag": "0004_thick_toro",
+      "breakpoints": true
     }
   ]
 }

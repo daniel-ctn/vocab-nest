@@ -152,6 +152,7 @@ export async function completePractice(practiceId: string) {
 
   if (reviewedCountResult > 0) {
     const yesterdayStr = previousDayKey(today)
+    const dayBeforeStr = previousDayKey(yesterdayStr)
 
     await db.transaction(async (tx) => {
       const stats = await tx
@@ -164,15 +165,27 @@ export async function completePractice(practiceId: string) {
       if (!stats) return
 
       let streak = stats.streakDays
-      if (stats.lastPracticeDate === yesterdayStr) {
+      let freezes = stats.streakFreezes
+      if (stats.lastPracticeDate === today) {
+        // Already practiced today — keep the streak unchanged.
+      } else if (stats.lastPracticeDate === yesterdayStr) {
         streak += 1
-      } else if (stats.lastPracticeDate !== today) {
+      } else if (stats.lastPracticeDate === dayBeforeStr && freezes > 0) {
+        // Missed exactly one day — spend a freeze to keep the streak alive.
+        streak += 1
+        freezes -= 1
+      } else {
         streak = 1
       }
 
       await tx
         .update(userStats)
-        .set({ streakDays: streak, lastPracticeDate: today })
+        .set({
+          streakDays: streak,
+          longestStreak: Math.max(stats.longestStreak, streak),
+          streakFreezes: freezes,
+          lastPracticeDate: today,
+        })
         .where(eq(userStats.userId, user.id))
     })
   }

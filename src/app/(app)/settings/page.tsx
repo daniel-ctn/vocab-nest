@@ -15,7 +15,12 @@ export default async function SettingsPage() {
   const user = await requireUser()
   const [stats, pro] = await Promise.all([
     db
-      .select({ dailyGoal: userStats.dailyGoal })
+      .select({
+        dailyGoal: userStats.dailyGoal,
+        emailReminders: userStats.emailReminders,
+        reminderHour: userStats.reminderHour,
+        streakFreezes: userStats.streakFreezes,
+      })
       .from(userStats)
       .where(eq(userStats.userId, user.id))
       .limit(1)
@@ -39,7 +44,12 @@ export default async function SettingsPage() {
         subtitle="Tune your daily goal and manage your collection."
       />
 
-      <SettingsForm name={user.name ?? ''} dailyGoal={stats?.dailyGoal ?? 10} />
+      <SettingsForm
+        name={user.name ?? ''}
+        dailyGoal={stats?.dailyGoal ?? 10}
+        emailReminders={stats?.emailReminders ?? true}
+        reminderHour={stats?.reminderHour ?? 9}
+      />
 
       {/* Export */}
       <section className="space-y-4">

@@ -10,6 +10,8 @@ import { requireUser } from '@/lib/session'
 const UpdateSettingsSchema = z.object({
   name: z.string().trim().max(100).optional(),
   dailyGoal: z.number().int().min(1).max(200),
+  emailReminders: z.boolean(),
+  reminderHour: z.number().int().min(0).max(23),
 })
 
 export async function updateUserSettings(input: unknown) {
@@ -25,10 +27,19 @@ export async function updateUserSettings(input: unknown) {
 
   await db
     .insert(userStats)
-    .values({ userId: current.id, dailyGoal: data.dailyGoal })
+    .values({
+      userId: current.id,
+      dailyGoal: data.dailyGoal,
+      emailReminders: data.emailReminders,
+      reminderHour: data.reminderHour,
+    })
     .onConflictDoUpdate({
       target: userStats.userId,
-      set: { dailyGoal: data.dailyGoal },
+      set: {
+        dailyGoal: data.dailyGoal,
+        emailReminders: data.emailReminders,
+        reminderHour: data.reminderHour,
+      },
     })
 
   revalidatePath('/settings')

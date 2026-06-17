@@ -78,6 +78,14 @@ export function previousDayKey(key: string): string {
   return dt.toISOString().slice(0, 10)
 }
 
+/** Next calendar day for a `YYYY-MM-DD` key. Timezone-independent. */
+export function nextDayKey(key: string): string {
+  const [y, m, d] = key.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  dt.setUTCDate(dt.getUTCDate() + 1)
+  return dt.toISOString().slice(0, 10)
+}
+
 /** Day of week (0=Sun … 6=Sat) for a `YYYY-MM-DD` key. Timezone-independent. */
 export function dayOfWeekFromKey(key: string): number {
   const [y, m, d] = key.split('-').map(Number)
