@@ -56,57 +56,64 @@ export async function getDashboardSummary(userId: string, timeZone = 'UTC') {
   const todayStart = startOfDayInTimeZone(now, timeZone)
   const todayEnd = endOfDayInTimeZone(now, timeZone)
 
-  const totalVocabulary = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(vocabularyEntries)
-    .where(eq(vocabularyEntries.userId, userId))
-    .then((rows) => Number(rows[0]?.count ?? 0))
+  // These counts are independent of one another — run them concurrently.
+  const [totalVocabulary, totalGroups, dueToday, reviewedToday, stats] =
+    await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(vocabularyEntries)
+        .where(eq(vocabularyEntries.userId, userId))
+        .then((rows) => Number(rows[0]?.count ?? 0)),
 
-  const totalGroups = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(groups)
-    .where(eq(groups.userId, userId))
-    .then((rows) => Number(rows[0]?.count ?? 0))
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(groups)
+        .where(eq(groups.userId, userId))
+        .then((rows) => Number(rows[0]?.count ?? 0)),
 
-  // Count words due for review (nextReviewAt <= now)
-  const dueToday = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(vocabularyReviewStats)
-    .innerJoin(
-      vocabularyEntries,
-      eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
-    )
-    .where(
-      and(
-        eq(vocabularyEntries.userId, userId),
-        lte(vocabularyReviewStats.nextReviewAt, now)
-      )
-    )
-    .then((rows) => Number(rows[0]?.count ?? 0))
+      // Words due for review (nextReviewAt <= now)
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(vocabularyReviewStats)
+        .innerJoin(
+          vocabularyEntries,
+          eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+        )
+        .where(
+          and(
+            eq(vocabularyEntries.userId, userId),
+            lte(vocabularyReviewStats.nextReviewAt, now)
+          )
+        )
+        .then((rows) => Number(rows[0]?.count ?? 0)),
 
-  // Count reviews done today
-  const reviewedToday = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(practiceItems)
-    .innerJoin(
-      practiceSessions,
-      eq(practiceItems.practiceSessionId, practiceSessions.id)
-    )
-    .where(
-      and(
-        eq(practiceSessions.userId, userId),
-        sql`${practiceItems.reviewedAt} >= ${todayStart}`,
-        sql`${practiceItems.reviewedAt} < ${todayEnd}`
-      )
-    )
-    .then((rows) => Number(rows[0]?.count ?? 0))
+      // Reviews done today
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(practiceItems)
+        .innerJoin(
+          practiceSessions,
+          eq(practiceItems.practiceSessionId, practiceSessions.id)
+        )
+        .where(
+          and(
+            eq(practiceSessions.userId, userId),
+            sql`${practiceItems.reviewedAt} >= ${todayStart}`,
+            sql`${practiceItems.reviewedAt} < ${todayEnd}`
+          )
+        )
+        .then((rows) => Number(rows[0]?.count ?? 0)),
 
-  const stats = await db
-    .select({ streakDays: userStats.streakDays, dailyGoal: userStats.dailyGoal })
-    .from(userStats)
-    .where(eq(userStats.userId, userId))
-    .limit(1)
-    .then((rows) => rows[0])
+      db
+        .select({
+          streakDays: userStats.streakDays,
+          dailyGoal: userStats.dailyGoal,
+        })
+        .from(userStats)
+        .where(eq(userStats.userId, userId))
+        .limit(1)
+        .then((rows) => rows[0]),
+    ])
 
   return {
     totalVocabulary,

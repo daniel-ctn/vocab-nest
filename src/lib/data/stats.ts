@@ -54,44 +54,83 @@ export async function getLearningStats(
 ): Promise<LearningStats> {
   const now = new Date()
 
-  const totalVocabulary = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(vocabularyEntries)
-    .where(eq(vocabularyEntries.userId, userId))
-    .then((rows) => Number(rows[0]?.count ?? 0))
+  // Activity heatmap key range: last 16 weeks, in the user's timezone.
+  // Computed up front so the heatmap query can join the parallel batch below.
+  const HEATMAP_DAYS = 112
+  const heatKeys: string[] = []
+  let hk = dayKeyInTimeZone(now, timeZone)
+  for (let i = 0; i < HEATMAP_DAYS; i++) {
+    heatKeys.unshift(hk)
+    hk = previousDayKey(hk)
+  }
 
-  const dueToday = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(vocabularyReviewStats)
-    .innerJoin(
-      vocabularyEntries,
-      eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
-    )
-    .where(
-      and(
-        eq(vocabularyEntries.userId, userId),
-        sql`${vocabularyReviewStats.nextReviewAt} <= ${now}`
-      )
-    )
-    .then((rows) => Number(rows[0]?.count ?? 0))
+  // All five reads are independent — run them concurrently.
+  const [totalVocabulary, dueToday, allStats, sessions, streakRow] =
+    await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(vocabularyEntries)
+        .where(eq(vocabularyEntries.userId, userId))
+        .then((rows) => Number(rows[0]?.count ?? 0)),
 
-  const allStats = await db
-    .select({
-      totalReviews: vocabularyReviewStats.totalReviews,
-      totalCorrect: vocabularyReviewStats.totalCorrect,
-      intervalDays: vocabularyReviewStats.intervalDays,
-      easeFactor: vocabularyReviewStats.easeFactor,
-      nextReviewAt: vocabularyReviewStats.nextReviewAt,
-      vocabularyId: vocabularyReviewStats.vocabularyId,
-      term: vocabularyEntries.term,
-      definition: vocabularyEntries.definition,
-    })
-    .from(vocabularyReviewStats)
-    .innerJoin(
-      vocabularyEntries,
-      eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
-    )
-    .where(eq(vocabularyEntries.userId, userId))
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(vocabularyReviewStats)
+        .innerJoin(
+          vocabularyEntries,
+          eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+        )
+        .where(
+          and(
+            eq(vocabularyEntries.userId, userId),
+            sql`${vocabularyReviewStats.nextReviewAt} <= ${now}`
+          )
+        )
+        .then((rows) => Number(rows[0]?.count ?? 0)),
+
+      db
+        .select({
+          totalReviews: vocabularyReviewStats.totalReviews,
+          totalCorrect: vocabularyReviewStats.totalCorrect,
+          intervalDays: vocabularyReviewStats.intervalDays,
+          easeFactor: vocabularyReviewStats.easeFactor,
+          nextReviewAt: vocabularyReviewStats.nextReviewAt,
+          vocabularyId: vocabularyReviewStats.vocabularyId,
+          term: vocabularyEntries.term,
+          definition: vocabularyEntries.definition,
+        })
+        .from(vocabularyReviewStats)
+        .innerJoin(
+          vocabularyEntries,
+          eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+        )
+        .where(eq(vocabularyEntries.userId, userId)),
+
+      db
+        .select({
+          date: practiceSessions.date,
+          count: sql<number>`count(${practiceItems.id})`,
+        })
+        .from(practiceSessions)
+        .leftJoin(
+          practiceItems,
+          eq(practiceItems.practiceSessionId, practiceSessions.id)
+        )
+        .where(
+          and(
+            eq(practiceSessions.userId, userId),
+            gte(practiceSessions.date, heatKeys[0])
+          )
+        )
+        .groupBy(practiceSessions.date),
+
+      db
+        .select({ longestStreak: userStats.longestStreak })
+        .from(userStats)
+        .where(eq(userStats.userId, userId))
+        .limit(1)
+        .then((rows) => rows[0]),
+    ])
 
   const totalReviews = allStats.reduce((s, r) => s + r.totalReviews, 0)
   const totalCorrect = allStats.reduce((s, r) => s + r.totalCorrect, 0)
@@ -122,33 +161,6 @@ export async function getLearningStats(
     .filter((r) => r.accuracy < 70)
     .sort((a, b) => a.accuracy - b.accuracy || b.totalReviews - a.totalReviews)
     .slice(0, 10)
-
-  // Activity heatmap: last 16 weeks, in the user's timezone.
-  const HEATMAP_DAYS = 112
-  const heatKeys: string[] = []
-  let hk = dayKeyInTimeZone(now, timeZone)
-  for (let i = 0; i < HEATMAP_DAYS; i++) {
-    heatKeys.unshift(hk)
-    hk = previousDayKey(hk)
-  }
-
-  const sessions = await db
-    .select({
-      date: practiceSessions.date,
-      count: sql<number>`count(${practiceItems.id})`,
-    })
-    .from(practiceSessions)
-    .leftJoin(
-      practiceItems,
-      eq(practiceItems.practiceSessionId, practiceSessions.id)
-    )
-    .where(
-      and(
-        eq(practiceSessions.userId, userId),
-        gte(practiceSessions.date, heatKeys[0])
-      )
-    )
-    .groupBy(practiceSessions.date)
 
   const sessionMap = new Map(sessions.map((s) => [s.date, Number(s.count)]))
   const heatmap = heatKeys.map((date) => ({
@@ -183,12 +195,6 @@ export async function getLearningStats(
   }))
 
   // Streak + achievements (computed on read, no extra tables).
-  const streakRow = await db
-    .select({ longestStreak: userStats.longestStreak })
-    .from(userStats)
-    .where(eq(userStats.userId, userId))
-    .limit(1)
-    .then((rows) => rows[0])
   const longestStreak = streakRow?.longestStreak ?? 0
 
   const achievements = [
