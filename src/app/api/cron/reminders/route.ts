@@ -54,7 +54,11 @@ export async function GET(req: Request) {
 
   let sent = 0
   for (const c of candidates) {
-    if (c.lastPracticeDate === todayUtc) continue
+    // lastPracticeDate is a day-key in the user's own timezone, so for users
+    // ahead of UTC it can read as "tomorrow" relative to todayUtc. A lexical
+    // >= comparison skips anyone who has already practiced on their local
+    // today (or later), not just those whose key happens to equal todayUtc.
+    if (c.lastPracticeDate && c.lastPracticeDate >= todayUtc) continue
 
     const due = await db
       .select({ count: sql<number>`count(*)` })
