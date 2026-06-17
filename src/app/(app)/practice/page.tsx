@@ -70,7 +70,11 @@ export default async function PracticePage({
           {groupData.group.name}
         </Link>
       )}
-      <PracticeRunner session={today.session} definitions={today.definitions} />
+      <PracticeRunner
+        session={today.session}
+        definitions={today.definitions}
+        pool={today.pool}
+      />
     </div>
   )
 }

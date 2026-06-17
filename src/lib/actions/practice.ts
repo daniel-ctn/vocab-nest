@@ -13,7 +13,7 @@ import { requireUser } from '@/lib/session'
 import { getTimeZone } from '@/lib/timezone'
 import { dayKeyInTimeZone, previousDayKey } from '@/lib/date'
 import { PracticeReviewRequestSchema } from '@/lib/contracts'
-import { calculateNextReview } from '@/lib/data/practice'
+import { calculateNextReview, type ReviewGrade } from '@/lib/data/practice'
 
 export async function reviewPracticeItem(
   practiceId: string,
@@ -56,12 +56,15 @@ export async function reviewPracticeItem(
   }
 
   const now = new Date()
+  const grade = data.grade as ReviewGrade
+  const remembered = grade >= 2
 
   await db
     .update(practiceItems)
     .set({
       reviewedAt: now,
-      remembered: data.remembered,
+      remembered,
+      grade,
       answer: data.answer ?? null,
     })
     .where(eq(practiceItems.id, itemId))
@@ -80,7 +83,7 @@ export async function reviewPracticeItem(
     .then((rows) => rows[0])
 
   if (statsRow) {
-    const next = calculateNextReview(data.remembered, {
+    const next = calculateNextReview(grade, {
       intervalDays: statsRow.intervalDays,
       easeFactor: statsRow.easeFactor,
       consecutiveCorrect: statsRow.consecutiveCorrect,
@@ -97,7 +100,7 @@ export async function reviewPracticeItem(
         easeFactor: next.easeFactor,
         consecutiveCorrect: next.consecutiveCorrect,
         totalReviews: statsRow.totalReviews + 1,
-        totalCorrect: statsRow.totalCorrect + (data.remembered ? 1 : 0),
+        totalCorrect: statsRow.totalCorrect + (remembered ? 1 : 0),
         updatedAt: now,
       })
       .where(eq(vocabularyReviewStats.vocabularyId, item.vocabularyId))

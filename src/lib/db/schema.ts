@@ -158,6 +158,7 @@ export const practiceItems = pgTable(
     dueAt: timestamp('due_at').notNull(),
     reviewedAt: timestamp('reviewed_at'),
     remembered: boolean('remembered'),
+    grade: integer('grade'),
     answer: text('answer'),
   },
   (t) => [
