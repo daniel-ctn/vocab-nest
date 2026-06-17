@@ -135,10 +135,21 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
             Account
           </Caps>
           <Link
+            href="/settings"
+            className={cn(
+              'block py-1.5 text-[14px] transition-colors',
+              pathname === '/settings'
+                ? 'text-ink'
+                : 'text-ink-secondary hover:text-ink'
+            )}
+          >
+            Preferences
+          </Link>
+          <Link
             href="/settings/billing"
             className={cn(
               'block py-1.5 text-[14px] transition-colors',
-              isActive(pathname, '/settings')
+              isActive(pathname, '/settings/billing')
                 ? 'text-ink'
                 : 'text-ink-secondary hover:text-ink'
             )}
@@ -193,11 +204,18 @@ function ProfileMenu({ isAdmin }: { isAdmin?: boolean }) {
               Groups
             </Link>
             <Link
-              href="/settings/billing"
+              href="/settings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
             >
               <Settings size={13} />
+              Preferences
+            </Link>
+            <Link
+              href="/settings/billing"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-2 text-[13px] text-ink hover:bg-border-subtle"
+            >
               Billing
             </Link>
             {isAdmin && (

@@ -165,7 +165,13 @@ export function VocabularyForm({
   const [definition, setDefinition] = useState(entry?.definition ?? '')
   const [language, setLanguage] = useState(entry?.language ?? '')
   const [partOfSpeech, setPartOfSpeech] = useState(entry?.partOfSpeech ?? '')
+  const [pronunciation, setPronunciation] = useState(entry?.pronunciation ?? '')
   const [examples, setExamples] = useState<string[]>(entry?.examples ?? [])
+  const [synonyms, setSynonyms] = useState<string[]>(entry?.synonyms ?? [])
+  const [antonyms, setAntonyms] = useState<string[]>(entry?.antonyms ?? [])
+  const [etymology, setEtymology] = useState(entry?.etymology ?? '')
+  const [mnemonic, setMnemonic] = useState(entry?.mnemonic ?? '')
+  const [notes, setNotes] = useState(entry?.notes ?? '')
   const [tags, setTags] = useState<string[]>(entry?.tags ?? [])
   const [isPending, startTransition] = useTransition()
 
@@ -178,7 +184,13 @@ export function VocabularyForm({
       definition: definition.trim(),
       language: language.trim() || undefined,
       partOfSpeech: partOfSpeech.trim() || undefined,
+      pronunciation: pronunciation.trim() || undefined,
       examples: examples.length > 0 ? examples : undefined,
+      synonyms: synonyms.length > 0 ? synonyms : undefined,
+      antonyms: antonyms.length > 0 ? antonyms : undefined,
+      etymology: etymology.trim() || undefined,
+      mnemonic: mnemonic.trim() || undefined,
+      notes: notes.trim() || undefined,
       tags: tags.length > 0 ? tags : undefined,
     }
 
@@ -238,7 +250,7 @@ export function VocabularyForm({
           />
         </Field>
 
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
           <Field>
             <Label htmlFor="lang">Language</Label>
             <Input
@@ -257,6 +269,16 @@ export function VocabularyForm({
               placeholder="noun"
             />
           </Field>
+          <Field>
+            <Label htmlFor="pron">Pronunciation</Label>
+            <Input
+              id="pron"
+              value={pronunciation}
+              onChange={(e) => setPronunciation(e.target.value)}
+              placeholder="/ˌsɛr.ənˈdɪp.ɪ.ti/"
+              className="font-mono text-[13px] placeholder:font-mono placeholder:not-italic"
+            />
+          </Field>
         </div>
 
         <div className="space-y-4">
@@ -264,6 +286,63 @@ export function VocabularyForm({
           <Rule />
           <ExampleInput examples={examples} onChange={setExamples} />
         </div>
+
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <div className="space-y-4">
+            <Caps as="div">Synonyms</Caps>
+            <Rule />
+            <TagInput
+              tags={synonyms}
+              onChange={setSynonyms}
+              placeholder="Add a synonym"
+            />
+          </div>
+          <div className="space-y-4">
+            <Caps as="div">Antonyms</Caps>
+            <Rule />
+            <TagInput
+              tags={antonyms}
+              onChange={setAntonyms}
+              placeholder="Add an antonym"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <Field>
+            <Label htmlFor="etymology">Etymology</Label>
+            <Textarea
+              id="etymology"
+              rows={2}
+              value={etymology}
+              onChange={(e) => setEtymology(e.target.value)}
+              placeholder="Origin and history"
+              className="font-display italic text-[15px]"
+            />
+          </Field>
+          <Field>
+            <Label htmlFor="mnemonic">Mnemonic</Label>
+            <Textarea
+              id="mnemonic"
+              rows={2}
+              value={mnemonic}
+              onChange={(e) => setMnemonic(e.target.value)}
+              placeholder="A memory aid"
+              className="font-display italic text-[15px]"
+            />
+          </Field>
+        </div>
+
+        <Field>
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            id="notes"
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Anything else worth remembering"
+          />
+        </Field>
 
         <div className="space-y-4">
           <Caps as="div">Tags</Caps>

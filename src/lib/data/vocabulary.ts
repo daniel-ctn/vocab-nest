@@ -25,14 +25,20 @@ export type VocabularyDetail = {
 
 type VocabularyRow = typeof vocabularyEntries.$inferSelect
 
-function toVocabularyEntry(row: VocabularyRow): VocabularyEntry {
+export function toVocabularyEntry(row: VocabularyRow): VocabularyEntry {
   return {
     id: row.id,
     term: row.term,
     definition: row.definition,
     language: row.language ?? undefined,
     partOfSpeech: row.partOfSpeech ?? undefined,
+    pronunciation: row.pronunciation ?? undefined,
+    notes: row.notes ?? undefined,
+    etymology: row.etymology ?? undefined,
+    mnemonic: row.mnemonic ?? undefined,
     examples: row.examples,
+    synonyms: row.synonyms,
+    antonyms: row.antonyms,
     tags: row.tags,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

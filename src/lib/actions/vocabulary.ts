@@ -7,6 +7,7 @@ import { vocabularyEntries, vocabularyReviewStats } from '@/lib/db/schema'
 import { requireUser } from '@/lib/session'
 import { rateLimit } from '@/lib/rate-limit'
 import { isPro } from '@/lib/data/subscription'
+import { toVocabularyEntry } from '@/lib/data/vocabulary'
 import {
   CreateVocabularyRequestSchema,
   UpdateVocabularyRequestSchema,
@@ -52,7 +53,13 @@ export async function createVocabulary(
       definition: data.definition,
       language: data.language ?? null,
       partOfSpeech: data.partOfSpeech ?? null,
+      pronunciation: data.pronunciation ?? null,
+      notes: data.notes ?? null,
+      etymology: data.etymology ?? null,
+      mnemonic: data.mnemonic ?? null,
       examples: data.examples ?? [],
+      synonyms: data.synonyms ?? [],
+      antonyms: data.antonyms ?? [],
       tags: data.tags ?? [],
       createdAt: now,
       updatedAt: now,
@@ -98,7 +105,14 @@ export async function updateVocabulary(id: string, input: unknown) {
   if (data.language !== undefined) updateData.language = data.language
   if (data.partOfSpeech !== undefined)
     updateData.partOfSpeech = data.partOfSpeech
+  if (data.pronunciation !== undefined)
+    updateData.pronunciation = data.pronunciation
+  if (data.notes !== undefined) updateData.notes = data.notes
+  if (data.etymology !== undefined) updateData.etymology = data.etymology
+  if (data.mnemonic !== undefined) updateData.mnemonic = data.mnemonic
   if (data.examples !== undefined) updateData.examples = data.examples
+  if (data.synonyms !== undefined) updateData.synonyms = data.synonyms
+  if (data.antonyms !== undefined) updateData.antonyms = data.antonyms
   if (data.tags !== undefined) updateData.tags = data.tags
 
   await db
@@ -157,32 +171,12 @@ export async function searchVocabulary(
   }
 
   const rows = await db
-    .select({
-      id: vocabularyEntries.id,
-      term: vocabularyEntries.term,
-      definition: vocabularyEntries.definition,
-      language: vocabularyEntries.language,
-      partOfSpeech: vocabularyEntries.partOfSpeech,
-      examples: vocabularyEntries.examples,
-      tags: vocabularyEntries.tags,
-      createdAt: vocabularyEntries.createdAt,
-      updatedAt: vocabularyEntries.updatedAt,
-    })
+    .select()
     .from(vocabularyEntries)
     .where(and(...conditions))
     .limit(50)
 
-  return rows.map((r) => ({
-    id: r.id,
-    term: r.term,
-    definition: r.definition,
-    language: r.language ?? undefined,
-    partOfSpeech: r.partOfSpeech ?? undefined,
-    examples: r.examples ?? [],
-    tags: r.tags ?? [],
-    createdAt: r.createdAt.toISOString(),
-    updatedAt: r.updatedAt.toISOString(),
-  }))
+  return rows.map(toVocabularyEntry)
 }
 
 type BulkEntry = {

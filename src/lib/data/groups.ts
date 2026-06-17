@@ -1,6 +1,7 @@
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { groups, vocabularyEntries, vocabularyGroups } from '@/lib/db/schema'
+import { toVocabularyEntry } from '@/lib/data/vocabulary'
 import type { Group, VocabularyEntry } from '@/lib/contracts'
 
 export async function listGroups(userId: string): Promise<Group[]> {
@@ -45,17 +46,7 @@ export async function getGroupWithVocabulary(
   if (!group) return null
 
   const vocabRows = await db
-    .select({
-      id: vocabularyEntries.id,
-      term: vocabularyEntries.term,
-      definition: vocabularyEntries.definition,
-      language: vocabularyEntries.language,
-      partOfSpeech: vocabularyEntries.partOfSpeech,
-      examples: vocabularyEntries.examples,
-      tags: vocabularyEntries.tags,
-      createdAt: vocabularyEntries.createdAt,
-      updatedAt: vocabularyEntries.updatedAt,
-    })
+    .select({ entry: vocabularyEntries })
     .from(vocabularyEntries)
     .innerJoin(
       vocabularyGroups,
@@ -63,17 +54,9 @@ export async function getGroupWithVocabulary(
     )
     .where(eq(vocabularyGroups.groupId, id))
 
-  const items: VocabularyEntry[] = vocabRows.map((v) => ({
-    id: v.id,
-    term: v.term,
-    definition: v.definition,
-    language: v.language ?? undefined,
-    partOfSpeech: v.partOfSpeech ?? undefined,
-    examples: v.examples,
-    tags: v.tags,
-    createdAt: v.createdAt.toISOString(),
-    updatedAt: v.updatedAt.toISOString(),
-  }))
+  const items: VocabularyEntry[] = vocabRows.map((v) =>
+    toVocabularyEntry(v.entry)
+  )
 
   return {
     group: {
@@ -113,17 +96,7 @@ export async function listVocabularyNotInGroup(
       .from(vocabularyEntries)
       .where(eq(vocabularyEntries.userId, userId))
       .orderBy(vocabularyEntries.term)
-    return rows.map((v) => ({
-      id: v.id,
-      term: v.term,
-      definition: v.definition,
-      language: v.language ?? undefined,
-      partOfSpeech: v.partOfSpeech ?? undefined,
-      examples: v.examples,
-      tags: v.tags,
-      createdAt: v.createdAt.toISOString(),
-      updatedAt: v.updatedAt.toISOString(),
-    }))
+    return rows.map(toVocabularyEntry)
   }
 
   const rows = await db
@@ -137,15 +110,5 @@ export async function listVocabularyNotInGroup(
     )
     .orderBy(vocabularyEntries.term)
 
-  return rows.map((v) => ({
-    id: v.id,
-    term: v.term,
-    definition: v.definition,
-    language: v.language ?? undefined,
-    partOfSpeech: v.partOfSpeech ?? undefined,
-    examples: v.examples,
-    tags: v.tags,
-    createdAt: v.createdAt.toISOString(),
-    updatedAt: v.updatedAt.toISOString(),
-  }))
+  return rows.map(toVocabularyEntry)
 }

@@ -15,6 +15,13 @@
       "when": 1778559878641,
       "tag": "0001_wooden_midnight",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781683586874,
+      "tag": "0002_medical_human_fly",
+      "breakpoints": true
     }
   ]
 }
