@@ -13,18 +13,15 @@ export function SettingsForm({
   name,
   dailyGoal,
   emailReminders,
-  reminderHour,
 }: {
   name: string
   dailyGoal: number
   emailReminders: boolean
-  reminderHour: number
 }) {
   const router = useRouter()
   const [nameValue, setNameValue] = useState(name)
   const [goalValue, setGoalValue] = useState(String(dailyGoal))
   const [reminders, setReminders] = useState(emailReminders)
-  const [hour, setHour] = useState(String(reminderHour))
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -43,7 +40,6 @@ export function SettingsForm({
           name: nameValue.trim(),
           dailyGoal: goal,
           emailReminders: reminders,
-          reminderHour: Number(hour),
         })
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
@@ -112,29 +108,6 @@ export function SettingsForm({
             />
           </span>
         </button>
-
-        {reminders && (
-          <div className="flex items-center gap-3">
-            <Label htmlFor="hour" className="!normal-case">
-              Send around
-            </Label>
-            <select
-              id="hour"
-              value={hour}
-              onChange={(e) => setHour(e.target.value)}
-              className="border-0 border-b border-rule bg-transparent py-1 text-[14px] text-ink focus:border-ink focus:outline-none"
-            >
-              {Array.from({ length: 24 }, (_, h) => (
-                <option key={h} value={h}>
-                  {h.toString().padStart(2, '0')}:00
-                </option>
-              ))}
-            </select>
-            <span className="font-display text-[12px] italic text-ink-tertiary">
-              your local time
-            </span>
-          </div>
-        )}
       </div>
 
       {error && <Marginalia className="text-error">{error}</Marginalia>}

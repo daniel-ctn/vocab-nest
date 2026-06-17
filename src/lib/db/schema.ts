@@ -179,6 +179,9 @@ export const userStats = pgTable(
     lastPracticeDate: text('last_practice_date'),
     dailyGoal: integer('daily_goal').notNull().default(10),
     emailReminders: boolean('email_reminders').notNull().default(true),
+    // Unused: reminders go out daily at a fixed time. Honoring a per-user hour
+    // needs the user's timezone in the DB (it lives only in the vn-tz cookie),
+    // which the cron has no access to. Kept to avoid a destructive migration.
     reminderHour: integer('reminder_hour').notNull().default(9),
   },
   (t) => [index('user_stats_user_idx').on(t.userId)]

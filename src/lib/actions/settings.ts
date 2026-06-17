@@ -11,7 +11,6 @@ const UpdateSettingsSchema = z.object({
   name: z.string().trim().max(100).optional(),
   dailyGoal: z.number().int().min(1).max(200),
   emailReminders: z.boolean(),
-  reminderHour: z.number().int().min(0).max(23),
 })
 
 export async function updateUserSettings(input: unknown) {
@@ -31,14 +30,12 @@ export async function updateUserSettings(input: unknown) {
       userId: current.id,
       dailyGoal: data.dailyGoal,
       emailReminders: data.emailReminders,
-      reminderHour: data.reminderHour,
     })
     .onConflictDoUpdate({
       target: userStats.userId,
       set: {
         dailyGoal: data.dailyGoal,
         emailReminders: data.emailReminders,
-        reminderHour: data.reminderHour,
       },
     })
 

@@ -18,7 +18,6 @@ export default async function SettingsPage() {
       .select({
         dailyGoal: userStats.dailyGoal,
         emailReminders: userStats.emailReminders,
-        reminderHour: userStats.reminderHour,
         streakFreezes: userStats.streakFreezes,
       })
       .from(userStats)
@@ -48,7 +47,6 @@ export default async function SettingsPage() {
         name={user.name ?? ''}
         dailyGoal={stats?.dailyGoal ?? 10}
         emailReminders={stats?.emailReminders ?? true}
-        reminderHour={stats?.reminderHour ?? 9}
       />
 
       {/* Export */}
