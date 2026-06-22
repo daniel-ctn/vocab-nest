@@ -7,6 +7,7 @@ import {
   vocabularyReviewStats,
 } from '@/lib/db/schema'
 import { toVocabularyEntry } from '@/lib/data/vocabulary'
+import { rootingTier } from '@/lib/rooting'
 import type { Group, VocabularyEntry } from '@/lib/contracts'
 
 export type GroupReviewSummary = {
@@ -53,15 +54,7 @@ export async function getGroupReviewSummary(
   const dueIds: string[] = []
   for (const r of rows) {
     if (r.nextReviewAt <= now) dueIds.push(r.vocabularyId)
-    const t =
-      r.intervalDays <= 1
-        ? 0
-        : r.intervalDays <= 6
-          ? 1
-          : r.intervalDays <= 20
-            ? 2
-            : 3
-    tiers[t]++
+    tiers[rootingTier(r.intervalDays)]++
   }
 
   return { total: rows.length, dueCount: dueIds.length, tiers, dueIds }

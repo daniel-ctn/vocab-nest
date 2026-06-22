@@ -9,6 +9,8 @@ import { Caps } from '@/components/ui/caps'
 import { DropCap } from '@/components/ui/drop-cap'
 import { Marginalia } from '@/components/ui/marginalia'
 import { Rule } from '@/components/ui/rule'
+import { LedgerStat } from '@/components/ui/ledger'
+import { ROOTING_TIERS, ROOTING_INTENSITY, rootingTier } from '@/lib/rooting'
 import { cn } from '@/lib/cn'
 
 function fmtDate(iso: string) {
@@ -19,46 +21,13 @@ function fmtDate(iso: string) {
   })
 }
 
-// A word takes root over four tiers as its review interval lengthens.
-const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
-const TIER_INTENSITY = ['bg-ink/20', 'bg-ink/45', 'bg-ink/65', 'bg-ink'] as const
+// Copy for each rooting tier, index-aligned with ROOTING_TIERS.
 const TIER_BLURB = [
   'Newly added — still finding its footing.',
   'Coming back to you more often than not.',
   'Holding steady across longer gaps.',
   'Deeply rooted — it rarely slips.',
 ] as const
-
-function rootingTier(intervalDays: number): number {
-  if (intervalDays <= 1) return 0
-  if (intervalDays <= 6) return 1
-  if (intervalDays <= 20) return 2
-  return 3
-}
-
-function Figure({
-  label,
-  value,
-  active = false,
-}: {
-  label: string
-  value: React.ReactNode
-  active?: boolean
-}) {
-  return (
-    <div>
-      <Caps>{label}</Caps>
-      <div
-        className={cn(
-          'mt-1.5 font-display text-[26px] font-semibold leading-none tabular-nums sm:text-[30px]',
-          active ? 'text-accent' : 'text-ink'
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
 
 export default async function VocabularyDetailPage({
   params,
@@ -252,7 +221,7 @@ export default async function VocabularyDetailPage({
             <div>
               <Caps className="text-ink-tertiary">Standing</Caps>
               <div className="mt-1 font-display text-[34px] font-semibold leading-none tracking-tight text-ink">
-                {TIER_NAMES[rootingTier(stats.intervalDays)]}
+                {ROOTING_TIERS[rootingTier(stats.intervalDays)]}
               </div>
               <Marginalia className="mt-1.5">
                 {TIER_BLURB[rootingTier(stats.intervalDays)]}
@@ -262,15 +231,15 @@ export default async function VocabularyDetailPage({
               <div
                 className="flex h-2 gap-[3px]"
                 role="img"
-                aria-label={`Rooting: ${TIER_NAMES[rootingTier(stats.intervalDays)]}`}
+                aria-label={`Rooting: ${ROOTING_TIERS[rootingTier(stats.intervalDays)]}`}
               >
-                {TIER_NAMES.map((name, i) => (
+                {ROOTING_TIERS.map((name, i) => (
                   <div
                     key={name}
                     className={cn(
                       'flex-1',
                       i <= rootingTier(stats.intervalDays)
-                        ? TIER_INTENSITY[i]
+                        ? ROOTING_INTENSITY[i]
                         : 'bg-rule/50'
                     )}
                   />
@@ -285,14 +254,19 @@ export default async function VocabularyDetailPage({
 
           {/* Secondary figures */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
-            <Figure label="Accuracy" value={`${stats.accuracy}%`} />
-            <Figure label="Reviews" value={stats.totalReviews} />
-            <Figure
+            <LedgerStat size="sm" label="Accuracy" value={`${stats.accuracy}%`} />
+            <LedgerStat size="sm" label="Reviews" value={stats.totalReviews} />
+            <LedgerStat
+              size="sm"
               label="Run"
               value={stats.consecutiveCorrect}
               active={stats.consecutiveCorrect > 0}
             />
-            <Figure label="Interval" value={`${stats.intervalDays}d`} />
+            <LedgerStat
+              size="sm"
+              label="Interval"
+              value={`${stats.intervalDays}d`}
+            />
           </div>
 
           <Rule />

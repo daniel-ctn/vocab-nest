@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { requireUser } from '@/lib/session'
@@ -17,37 +16,7 @@ import {
 import { TallyMarks } from '@/components/ui/tally-marks'
 import { ButtonLink } from '@/components/ui/button'
 import { toRoman } from '@/components/ui/roman'
-import { cn } from '@/lib/cn'
-
-/** A single column in the day's ledger — a quiet figure, subordinate to the
- *  hero. Deliberately smaller and run-in with hairlines so the row reads as a
- *  ledger line, not a grid of identical cards. */
-function LedgerCell({
-  label,
-  value,
-  hint,
-  active = false,
-}: {
-  label: string
-  value: ReactNode
-  hint?: ReactNode
-  active?: boolean
-}) {
-  return (
-    <div className="px-4 first:pl-0 last:pr-0 sm:px-6">
-      <Caps>{label}</Caps>
-      <div
-        className={cn(
-          'mt-1.5 font-display text-[30px] font-semibold leading-none tracking-[-0.02em] tabular-nums sm:text-[36px]',
-          active ? 'text-accent' : 'text-ink'
-        )}
-      >
-        {value}
-      </div>
-      {hint && <div className="mt-2 min-h-5">{hint}</div>}
-    </div>
-  )
-}
+import { Ledger, LedgerStat } from '@/components/ui/ledger'
 
 export default async function DashboardPage() {
   const user = await requireUser()
@@ -126,35 +95,40 @@ export default async function DashboardPage() {
       </header>
 
       {/* The day's ledger — secondary figures, run-in with hairlines */}
-      <section className="grid grid-cols-3 divide-x divide-rule">
-        <LedgerCell
-          label="Day streak"
-          value={stats.streakDays}
-          active={stats.streakDays > 0}
-          hint={
-            stats.streakDays > 0 ? (
-              <TallyMarks count={stats.streakDays} />
-            ) : (
-              <Marginalia>no streak yet</Marginalia>
-            )
-          }
-        />
-        <LedgerCell
-          label="In the nest"
-          value={stats.totalVocabulary.toLocaleString()}
-          hint={
-            <Marginalia>
-              {stats.totalGroups > 0
-                ? `across ${stats.totalGroups} group${stats.totalGroups > 1 ? 's' : ''}`
-                : 'words collected'}
-            </Marginalia>
-          }
-        />
-        <LedgerCell
-          label="Reviewed today"
-          value={stats.reviewedToday}
-          hint={<Marginalia>of {stats.dailyGoal} goal</Marginalia>}
-        />
+      <section>
+        <Ledger>
+          <LedgerStat
+            size="lg"
+            label="Day streak"
+            value={stats.streakDays}
+            active={stats.streakDays > 0}
+            hint={
+              stats.streakDays > 0 ? (
+                <TallyMarks count={stats.streakDays} />
+              ) : (
+                <Marginalia>no streak yet</Marginalia>
+              )
+            }
+          />
+          <LedgerStat
+            size="lg"
+            label="In the nest"
+            value={stats.totalVocabulary.toLocaleString()}
+            hint={
+              <Marginalia>
+                {stats.totalGroups > 0
+                  ? `across ${stats.totalGroups} group${stats.totalGroups > 1 ? 's' : ''}`
+                  : 'words collected'}
+              </Marginalia>
+            }
+          />
+          <LedgerStat
+            size="lg"
+            label="Reviewed today"
+            value={stats.reviewedToday}
+            hint={<Marginalia>of {stats.dailyGoal} goal</Marginalia>}
+          />
+        </Ledger>
       </section>
 
       {/* Daily goal — a hairline track with a bookmark ribbon */}

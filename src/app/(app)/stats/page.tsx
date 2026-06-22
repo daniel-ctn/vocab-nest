@@ -19,15 +19,11 @@ import {
 } from '@/components/ui/specimen'
 import { toRoman } from '@/components/ui/roman'
 import { cn } from '@/lib/cn'
-
-// Bookbinder rename of the four mastery tiers (index-aligned with data).
-const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
-const TIER_INTENSITY = [
-  'bg-ink/15',
-  'bg-ink/35',
-  'bg-ink/60',
-  'bg-ink',
-] as const
+// The four mastery tiers, shared with the group and word-detail views.
+import {
+  ROOTING_TIERS as TIER_NAMES,
+  ROOTING_INTENSITY as TIER_INTENSITY,
+} from '@/lib/rooting'
 
 function heatClass(count: number): string {
   if (count <= 0) return 'bg-rule/40'

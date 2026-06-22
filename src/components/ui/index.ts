@@ -3,6 +3,7 @@ export { Chapter } from './chapter'
 export { DropCap } from './drop-cap'
 export { Marginalia } from './marginalia'
 export { Rule } from './rule'
+export { Ledger, LedgerStat } from './ledger'
 export { Stat, StatRow } from './stat'
 export { TallyMarks } from './tally-marks'
 export {

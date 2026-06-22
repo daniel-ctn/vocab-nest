@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowLeft, BrainCircuit } from 'lucide-react'
@@ -21,40 +20,12 @@ import {
   SpecimenList,
   SpecimenTerm,
 } from '@/components/ui/specimen'
+import { Ledger, LedgerStat } from '@/components/ui/ledger'
+import { ROOTING_TIERS, ROOTING_INTENSITY } from '@/lib/rooting'
 import { cn } from '@/lib/cn'
 import { DeleteGroupButton } from './delete-group-button'
 import { AddWordsToGroup } from './add-words'
 import type { VocabularyEntry } from '@/lib/contracts'
-
-const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
-const TIER_INTENSITY = ['bg-ink/20', 'bg-ink/45', 'bg-ink/65', 'bg-ink'] as const
-
-function DeckStat({
-  label,
-  value,
-  hint,
-  active = false,
-}: {
-  label: string
-  value: ReactNode
-  hint?: ReactNode
-  active?: boolean
-}) {
-  return (
-    <div className="px-4 first:pl-0 last:pr-0 sm:px-6">
-      <Caps>{label}</Caps>
-      <div
-        className={cn(
-          'mt-1.5 font-display text-[28px] font-semibold leading-none tracking-[-0.02em] tabular-nums sm:text-[32px]',
-          active ? 'text-accent' : 'text-ink'
-        )}
-      >
-        {value}
-      </div>
-      {hint && <div className="mt-2 min-h-5">{hint}</div>}
-    </div>
-  )
-}
 
 function WordRow({ entry, due }: { entry: VocabularyEntry; due: boolean }) {
   return (
@@ -158,9 +129,9 @@ export default async function GroupDetailPage({
         <>
           {/* Deck summary — the group's standing at a glance */}
           <section className="space-y-5">
-            <div className="grid grid-cols-3 divide-x divide-rule">
-              <DeckStat label="Words" value={summary.total} />
-              <DeckStat
+            <Ledger>
+              <LedgerStat label="Words" value={summary.total} />
+              <LedgerStat
                 label="Due now"
                 value={summary.dueCount}
                 active={summary.dueCount > 0}
@@ -170,7 +141,7 @@ export default async function GroupDetailPage({
                   </Marginalia>
                 }
               />
-              <DeckStat
+              <LedgerStat
                 label="Rooted"
                 value={summary.tiers[3]}
                 hint={
@@ -179,7 +150,7 @@ export default async function GroupDetailPage({
                   </Marginalia>
                 }
               />
-            </div>
+            </Ledger>
             <div className="space-y-3">
               <div
                 className="flex h-2 w-full overflow-hidden bg-rule"
@@ -191,19 +162,19 @@ export default async function GroupDetailPage({
                   if (pct <= 0) return null
                   return (
                     <div
-                      key={TIER_NAMES[i]}
-                      className={TIER_INTENSITY[i]}
+                      key={ROOTING_TIERS[i]}
+                      className={ROOTING_INTENSITY[i]}
                       style={{ width: `${pct}%` }}
                     />
                   )
                 })}
               </div>
               <div className="flex flex-wrap gap-x-5 gap-y-1.5">
-                {TIER_NAMES.map((name, i) => (
+                {ROOTING_TIERS.map((name, i) => (
                   <span key={name} className="inline-flex items-center gap-1.5">
                     <span
                       aria-hidden
-                      className={cn('inline-block h-2 w-2', TIER_INTENSITY[i])}
+                      className={cn('inline-block h-2 w-2', ROOTING_INTENSITY[i])}
                     />
                     <Caps className="text-ink-tertiary">
                       {name} {summary.tiers[i]}

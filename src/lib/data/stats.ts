@@ -8,6 +8,7 @@ import {
   vocabularyReviewStats,
 } from '@/lib/db/schema'
 import { dayKeyInTimeZone, nextDayKey, previousDayKey } from '@/lib/date'
+import { rootingTier } from '@/lib/rooting'
 
 export type LearningStats = {
   totalVocabulary: number
@@ -137,14 +138,9 @@ export async function getLearningStats(
   const overallAccuracy =
     totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0
 
-  const newCount = allStats.filter((r) => r.intervalDays === 1).length
-  const learningCount = allStats.filter(
-    (r) => r.intervalDays >= 2 && r.intervalDays <= 6
-  ).length
-  const reviewingCount = allStats.filter(
-    (r) => r.intervalDays >= 7 && r.intervalDays <= 20
-  ).length
-  const masteredCount = allStats.filter((r) => r.intervalDays > 20).length
+  const tierCounts: [number, number, number, number] = [0, 0, 0, 0]
+  for (const r of allStats) tierCounts[rootingTier(r.intervalDays)]++
+  const [newCount, learningCount, reviewingCount, masteredCount] = tierCounts
 
   const weakWords = allStats
     .filter((r) => r.totalReviews > 0)

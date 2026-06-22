@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { isAdmin } from '@/lib/admin'
 import { getAdminStats } from '@/lib/data/admin'
@@ -12,18 +11,8 @@ import {
   SpecimenTerm,
 } from '@/components/ui/specimen'
 import { toRoman } from '@/components/ui/roman'
+import { LedgerStat } from '@/components/ui/ledger'
 import { cn } from '@/lib/cn'
-
-function MiniStat({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div>
-      <Caps>{label}</Caps>
-      <div className="mt-1.5 font-display text-[28px] font-semibold leading-none tracking-[-0.02em] tabular-nums text-ink sm:text-[32px]">
-        {value}
-      </div>
-    </div>
-  )
-}
 
 export default async function AdminPage() {
   const admin = await isAdmin()
@@ -56,19 +45,19 @@ export default async function AdminPage() {
           }
         />
         <div className="grid grid-cols-2 gap-x-6 gap-y-6 pt-2 sm:grid-cols-4">
-          <MiniStat
+          <LedgerStat
             label="Total words"
             value={stats.totalVocabulary.toLocaleString()}
           />
-          <MiniStat
+          <LedgerStat
             label="Groups"
             value={stats.totalGroups.toLocaleString()}
           />
-          <MiniStat
+          <LedgerStat
             label="Practice sessions"
             value={stats.totalPracticeSessions.toLocaleString()}
           />
-          <MiniStat
+          <LedgerStat
             label="Reviews completed"
             value={stats.totalReviews.toLocaleString()}
           />
