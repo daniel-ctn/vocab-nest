@@ -20,6 +20,9 @@ type NavItem = {
   mobile?: boolean
 }
 
+/** Live counts for the shell: the due state and the nest's folio. */
+type NavSummary = { dueToday: number; totalWords: number }
+
 const primaryNav: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', mobile: true },
   { href: '/vocabulary', label: 'Vocabulary', mobile: true },
@@ -56,7 +59,13 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
-export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
+export function Sidebar({
+  isAdmin,
+  nav,
+}: {
+  isAdmin?: boolean
+  nav?: NavSummary
+}) {
   const pathname = usePathname()
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-rule bg-cream lg:flex">
@@ -75,12 +84,13 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
         <nav className="space-y-1">
           {primaryNav.map((item, i) => {
             const active = isActive(pathname, item.href)
+            const due = item.href === '/practice' ? (nav?.dueToday ?? 0) : 0
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'relative grid grid-cols-[28px_1fr] items-baseline gap-2 py-1.5 text-[14px] transition-colors',
+                  'relative grid grid-cols-[28px_1fr_auto] items-baseline gap-2 py-1.5 text-[14px] transition-colors',
                   active
                     ? 'text-ink'
                     : 'text-ink-secondary hover:text-ink'
@@ -103,6 +113,12 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
                 <span className={cn('font-medium', active && 'font-semibold')}>
                   {item.label}
                 </span>
+                {due > 0 && (
+                  <span className="self-center font-mono text-[11px] font-semibold tabular-nums text-accent">
+                    {due > 99 ? '99+' : due}
+                    <span className="sr-only"> due</span>
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -159,7 +175,15 @@ export function Sidebar({ isAdmin }: { isAdmin?: boolean }) {
         </div>
       </div>
 
-      <div className="border-t border-rule px-6 py-4">
+      <div className="space-y-3 border-t border-rule px-6 py-4">
+        {nav && (
+          <div className="flex items-baseline justify-between">
+            <Caps className="text-ink-tertiary">Bound in the nest</Caps>
+            <span className="font-display text-[15px] font-semibold tabular-nums text-ink">
+              {nav.totalWords.toLocaleString()}
+            </span>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <ThemeToggle className="-mx-2 inline-flex h-9 items-center gap-2 rounded-sm px-2 text-[13px] text-ink-secondary transition-colors hover:bg-border-subtle hover:text-ink" />
           <button
@@ -256,7 +280,7 @@ function MobileTopBar({ isAdmin }: { isAdmin?: boolean }) {
   )
 }
 
-function MobileNav() {
+function MobileNav({ nav }: { nav?: NavSummary }) {
   const pathname = usePathname()
   const items = primaryNav.filter((i) => i.mobile)
   return (
@@ -267,11 +291,13 @@ function MobileNav() {
       <div className="grid grid-cols-4">
         {items.map((item, i) => {
           const active = isActive(pathname, item.href)
+          const due = item.href === '/practice' ? (nav?.dueToday ?? 0) : 0
           return (
             <Link
               key={item.href}
               href={item.href}
               className="relative flex flex-col items-center justify-center gap-1 py-2.5"
+              aria-label={due > 0 ? `${item.label}, ${due} due` : undefined}
             >
               {active && (
                 <span
@@ -281,11 +307,17 @@ function MobileNav() {
               )}
               <span
                 className={cn(
-                  'font-display text-[11px] italic',
+                  'relative font-display text-[11px] italic',
                   active ? 'text-accent' : 'text-ink-tertiary'
                 )}
               >
                 {toRoman(i + 1)}
+                {due > 0 && (
+                  <span
+                    aria-hidden
+                    className="absolute -right-2 -top-1 h-1.5 w-1.5 rounded-full bg-accent"
+                  />
+                )}
               </span>
               <span
                 className={cn(
@@ -308,22 +340,24 @@ function MobileNav() {
 export function AppShell({
   children,
   isAdmin,
+  nav,
 }: {
   children: React.ReactNode
   isAdmin?: boolean
+  nav?: NavSummary
 }) {
   return (
     <div className="flex min-h-dvh bg-cream">
       <PageProgress />
       <TimeZoneSync />
-      <Sidebar isAdmin={isAdmin} />
+      <Sidebar isAdmin={isAdmin} nav={nav} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileTopBar isAdmin={isAdmin} />
         <main className="mx-auto w-full max-w-3xl flex-1 px-5 pb-28 pt-8 sm:px-8 sm:pt-10 lg:px-12 lg:pb-12">
           {children}
         </main>
       </div>
-      <MobileNav />
+      <MobileNav nav={nav} />
     </div>
   )
 }

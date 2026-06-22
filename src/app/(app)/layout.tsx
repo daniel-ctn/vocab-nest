@@ -1,11 +1,18 @@
 import { AppShell } from '@/components/app-shell'
-import { isAdmin } from '@/lib/admin'
+import { requireUser } from '@/lib/session'
+import { getNavSummary } from '@/lib/data/dashboard'
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const admin = await isAdmin()
-  return <AppShell isAdmin={admin}>{children}</AppShell>
+  const user = await requireUser()
+  const admin = user.email === process.env.ADMIN_EMAIL
+  const nav = await getNavSummary(user.id)
+  return (
+    <AppShell isAdmin={admin} nav={nav}>
+      {children}
+    </AppShell>
+  )
 }

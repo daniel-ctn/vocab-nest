@@ -51,6 +51,38 @@ export async function getDueWordsPreview(
   }))
 }
 
+/**
+ * Two cheap counts for the app shell: the live due count (drives the terracotta
+ * state in the nav) and the total words "bound" in the nest (the sidebar folio).
+ */
+export async function getNavSummary(userId: string) {
+  const now = new Date()
+  const [dueToday, totalWords] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(vocabularyReviewStats)
+      .innerJoin(
+        vocabularyEntries,
+        eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+      )
+      .where(
+        and(
+          eq(vocabularyEntries.userId, userId),
+          lte(vocabularyReviewStats.nextReviewAt, now)
+        )
+      )
+      .then((rows) => Number(rows[0]?.count ?? 0)),
+
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(vocabularyEntries)
+      .where(eq(vocabularyEntries.userId, userId))
+      .then((rows) => Number(rows[0]?.count ?? 0)),
+  ])
+
+  return { dueToday, totalWords }
+}
+
 export async function getDashboardSummary(userId: string, timeZone = 'UTC') {
   const now = new Date()
   const todayStart = startOfDayInTimeZone(now, timeZone)
