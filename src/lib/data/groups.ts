@@ -1,8 +1,71 @@
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { groups, vocabularyEntries, vocabularyGroups } from '@/lib/db/schema'
+import {
+  groups,
+  vocabularyEntries,
+  vocabularyGroups,
+  vocabularyReviewStats,
+} from '@/lib/db/schema'
 import { toVocabularyEntry } from '@/lib/data/vocabulary'
 import type { Group, VocabularyEntry } from '@/lib/contracts'
+
+export type GroupReviewSummary = {
+  total: number
+  dueCount: number
+  /** Word counts by rooting tier: Fresh, Familiar, Steady, Rooted. */
+  tiers: [number, number, number, number]
+  dueIds: string[]
+}
+
+/**
+ * A deck's standing: how many words are due now and how they're distributed
+ * across the four rooting tiers (by SRS interval). Every word carries a review
+ * stats row from creation, so a single join covers the whole group.
+ */
+export async function getGroupReviewSummary(
+  groupId: string,
+  userId: string
+): Promise<GroupReviewSummary> {
+  const rows = await db
+    .select({
+      vocabularyId: vocabularyReviewStats.vocabularyId,
+      nextReviewAt: vocabularyReviewStats.nextReviewAt,
+      intervalDays: vocabularyReviewStats.intervalDays,
+    })
+    .from(vocabularyReviewStats)
+    .innerJoin(
+      vocabularyEntries,
+      eq(vocabularyReviewStats.vocabularyId, vocabularyEntries.id)
+    )
+    .innerJoin(
+      vocabularyGroups,
+      eq(vocabularyGroups.vocabularyId, vocabularyEntries.id)
+    )
+    .where(
+      and(
+        eq(vocabularyGroups.groupId, groupId),
+        eq(vocabularyEntries.userId, userId)
+      )
+    )
+
+  const now = new Date()
+  const tiers: [number, number, number, number] = [0, 0, 0, 0]
+  const dueIds: string[] = []
+  for (const r of rows) {
+    if (r.nextReviewAt <= now) dueIds.push(r.vocabularyId)
+    const t =
+      r.intervalDays <= 1
+        ? 0
+        : r.intervalDays <= 6
+          ? 1
+          : r.intervalDays <= 20
+            ? 2
+            : 3
+    tiers[t]++
+  }
+
+  return { total: rows.length, dueCount: dueIds.length, tiers, dueIds }
+}
 
 export async function listGroups(userId: string): Promise<Group[]> {
   const rows = await db

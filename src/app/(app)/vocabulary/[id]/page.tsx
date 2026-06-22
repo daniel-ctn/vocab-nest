@@ -9,7 +9,7 @@ import { Caps } from '@/components/ui/caps'
 import { DropCap } from '@/components/ui/drop-cap'
 import { Marginalia } from '@/components/ui/marginalia'
 import { Rule } from '@/components/ui/rule'
-import { Stat, StatRow } from '@/components/ui/stat'
+import { cn } from '@/lib/cn'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -17,6 +17,47 @@ function fmtDate(iso: string) {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+// A word takes root over four tiers as its review interval lengthens.
+const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
+const TIER_INTENSITY = ['bg-ink/20', 'bg-ink/45', 'bg-ink/65', 'bg-ink'] as const
+const TIER_BLURB = [
+  'Newly added — still finding its footing.',
+  'Coming back to you more often than not.',
+  'Holding steady across longer gaps.',
+  'Deeply rooted — it rarely slips.',
+] as const
+
+function rootingTier(intervalDays: number): number {
+  if (intervalDays <= 1) return 0
+  if (intervalDays <= 6) return 1
+  if (intervalDays <= 20) return 2
+  return 3
+}
+
+function Figure({
+  label,
+  value,
+  active = false,
+}: {
+  label: string
+  value: React.ReactNode
+  active?: boolean
+}) {
+  return (
+    <div>
+      <Caps>{label}</Caps>
+      <div
+        className={cn(
+          'mt-1.5 font-display text-[26px] font-semibold leading-none tabular-nums sm:text-[30px]',
+          active ? 'text-accent' : 'text-ink'
+        )}
+      >
+        {value}
+      </div>
+    </div>
+  )
 }
 
 export default async function VocabularyDetailPage({
@@ -202,19 +243,58 @@ export default async function VocabularyDetailPage({
 
       {/* Review ledger */}
       {stats && (
-        <section className="space-y-5">
+        <section className="space-y-6">
           <Caps as="div">Review ledger</Caps>
           <Rule />
-          <StatRow cols={4}>
-            <Stat value={`${stats.accuracy}%`} label="Accuracy" />
-            <Stat value={stats.totalReviews} label="Reviews" />
-            <Stat
-              value={stats.consecutiveCorrect}
+
+          {/* Standing — the word's rooting tier, led, with a gauge */}
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Caps className="text-ink-tertiary">Standing</Caps>
+              <div className="mt-1 font-display text-[34px] font-semibold leading-none tracking-tight text-ink">
+                {TIER_NAMES[rootingTier(stats.intervalDays)]}
+              </div>
+              <Marginalia className="mt-1.5">
+                {TIER_BLURB[rootingTier(stats.intervalDays)]}
+              </Marginalia>
+            </div>
+            <div className="w-full sm:max-w-[210px]">
+              <div
+                className="flex h-2 gap-[3px]"
+                role="img"
+                aria-label={`Rooting: ${TIER_NAMES[rootingTier(stats.intervalDays)]}`}
+              >
+                {TIER_NAMES.map((name, i) => (
+                  <div
+                    key={name}
+                    className={cn(
+                      'flex-1',
+                      i <= rootingTier(stats.intervalDays)
+                        ? TIER_INTENSITY[i]
+                        : 'bg-rule/50'
+                    )}
+                  />
+                ))}
+              </div>
+              <div className="mt-2 flex justify-between">
+                <Caps className="text-ink-tertiary">Fresh</Caps>
+                <Caps className="text-ink-tertiary">Rooted</Caps>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary figures */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
+            <Figure label="Accuracy" value={`${stats.accuracy}%`} />
+            <Figure label="Reviews" value={stats.totalReviews} />
+            <Figure
               label="Run"
+              value={stats.consecutiveCorrect}
               active={stats.consecutiveCorrect > 0}
             />
-            <Stat value={`${stats.intervalDays}d`} label="Interval" />
-          </StatRow>
+            <Figure label="Interval" value={`${stats.intervalDays}d`} />
+          </div>
+
           <Rule />
           <div className="flex items-center justify-between gap-3">
             <Marginalia>
