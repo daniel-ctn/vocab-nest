@@ -18,6 +18,7 @@ import {
   SpecimenTerm,
 } from '@/components/ui/specimen'
 import { toRoman } from '@/components/ui/roman'
+import { cn } from '@/lib/cn'
 
 // Bookbinder rename of the four mastery tiers (index-aligned with data).
 const TIER_NAMES = ['Fresh', 'Familiar', 'Steady', 'Rooted'] as const
@@ -33,6 +34,95 @@ function heatClass(count: number): string {
   if (count <= 2) return 'bg-ink/25'
   if (count <= 5) return 'bg-ink/50'
   return 'bg-ink'
+}
+
+/**
+ * Review forecast as a composed chart: a bar per day for the words coming due,
+ * plus a hairline cumulative line tracing how the backlog accumulates over the
+ * fortnight. Drawn in SVG so the two series share one baseline; day labels are
+ * rendered as HTML below so they stay legible at every width.
+ */
+function ForecastChart({
+  upcoming,
+}: {
+  upcoming: { date: string; count: number }[]
+}) {
+  const n = upcoming.length
+  const counts = upcoming.map((d) => d.count)
+  const maxDaily = Math.max(...counts, 1)
+  const cumulative: number[] = []
+  counts.reduce((acc, c, i) => (cumulative[i] = acc + c), 0)
+  const total = cumulative[n - 1] || 1
+
+  const W = 700
+  const H = 180
+  const padTop = 14
+  const padBottom = 10
+  const plotH = H - padTop - padBottom
+  const baseY = padTop + plotH
+  const slot = W / n
+  const barW = Math.min(slot * 0.46, 16)
+
+  const cx = (i: number) => (i + 0.5) * slot
+  const lineY = (i: number) => baseY - (cumulative[i] / total) * plotH
+  const linePath = upcoming
+    .map(
+      (_, i) =>
+        `${i === 0 ? 'M' : 'L'} ${cx(i).toFixed(1)} ${lineY(i).toFixed(1)}`
+    )
+    .join(' ')
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="w-full"
+      role="img"
+      aria-label={`Review forecast: ${total} words coming due over the next ${n} days`}
+    >
+      <line
+        x1={0}
+        y1={baseY}
+        x2={W}
+        y2={baseY}
+        className="stroke-rule"
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+      />
+      {upcoming.map((d, i) => {
+        const h = (d.count / maxDaily) * plotH
+        const isToday = i === 0
+        return (
+          <g key={d.date}>
+            <title>{`${d.date}: ${d.count} due · ${cumulative[i]} cumulative`}</title>
+            {d.count > 0 && (
+              <rect
+                x={cx(i) - barW / 2}
+                y={baseY - h}
+                width={barW}
+                height={h}
+                className={isToday ? 'fill-accent' : 'fill-ink opacity-80'}
+              />
+            )}
+          </g>
+        )
+      })}
+      <path
+        d={linePath}
+        className="fill-none stroke-accent"
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <circle cx={cx(0)} cy={lineY(0)} r={3} className="fill-accent" />
+      <circle
+        cx={cx(n - 1)}
+        cy={lineY(n - 1)}
+        r={3}
+        className="fill-accent"
+      />
+    </svg>
+  )
 }
 
 export default async function StatsPage() {
@@ -63,7 +153,10 @@ export default async function StatsPage() {
     (s, b) => s + b.count,
     0
   )
-  const maxUpcoming = Math.max(...stats.forecast.upcoming.map((d) => d.count), 1)
+  const upcomingTotal = stats.forecast.upcoming.reduce(
+    (s, d) => s + d.count,
+    0
+  )
   const unlocked = stats.achievements.filter((a) => a.achieved).length
 
   return (
@@ -196,32 +289,41 @@ export default async function StatsPage() {
           </span>
         </div>
         <Rule />
-        <div className="flex items-end gap-1.5 h-24">
-          {stats.forecast.upcoming.map((day, i) => {
-            const pct = Math.round((day.count / maxUpcoming) * 100)
-            const [, mm, dd] = day.date.split('-')
-            return (
-              <div
-                key={day.date}
-                className="flex flex-1 flex-col items-center gap-2"
-                title={`${Number(mm)}/${Number(dd)}: ${day.count} due`}
-              >
-                <div className="relative w-full flex-1 bg-rule">
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 transition-all ${
-                      i === 0 ? 'bg-accent' : 'bg-ink'
-                    }`}
-                    style={{ height: `${Math.max(pct, day.count > 0 ? 6 : 0)}%` }}
-                  />
-                </div>
-                <span className="font-display text-[10px] italic tabular-nums text-ink-tertiary">
-                  {Number(dd)}
+        <div className="space-y-2">
+          <ForecastChart upcoming={stats.forecast.upcoming} />
+          <div className="flex w-full">
+            {stats.forecast.upcoming.map((day, i) => {
+              const [, , dd] = day.date.split('-')
+              const isToday = i === 0
+              return (
+                <span
+                  key={day.date}
+                  className={cn(
+                    'flex-1 text-center font-display text-[10px] italic tabular-nums',
+                    isToday ? 'text-accent' : 'text-ink-tertiary'
+                  )}
+                >
+                  {isToday ? 'Today' : Number(dd)}
                 </span>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-        <Marginalia>Words coming due over the next two weeks.</Marginalia>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="inline-block h-2.5 w-1.5 bg-ink opacity-80"
+            />
+            <Caps className="text-ink-tertiary">due each day</Caps>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="inline-block h-px w-4 bg-accent" />
+            <Caps className="text-ink-tertiary">
+              running total · {upcomingTotal}
+            </Caps>
+          </span>
+        </div>
       </section>
 
       {/* Milestones */}
@@ -230,6 +332,8 @@ export default async function StatsPage() {
           <Caps as="div">Milestones</Caps>
           <span className="font-display text-[13px] italic text-ink-tertiary">
             {unlocked} of {stats.achievements.length}
+            {stats.longestStreak > 0 &&
+              ` · longest streak ${stats.longestStreak}d`}
           </span>
         </div>
         <Rule />
