@@ -231,18 +231,21 @@ export function GroupsList({
       )}
 
       {groups.length === 0 ? (
-        <div className="py-16 text-center">
-          <div className="font-display text-5xl text-ink-tertiary">—</div>
-          <p className="mt-3 font-display italic text-[15px] text-ink-tertiary">
-            No groups yet.
+        <div className="space-y-5 py-10 text-center">
+          <Rule ornament />
+          <h3 className="font-display text-[28px] font-semibold leading-tight tracking-tight text-ink">
+            No collections yet.
+          </h3>
+          <p className="mx-auto max-w-sm font-display text-[16px] italic leading-relaxed text-ink-secondary">
+            Gather kindred words — a deck for exams, a shelf for a language, a
+            page for a project.
           </p>
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="mt-6 text-[13px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
-          >
-            Create your first group →
-          </button>
+          <div className="flex justify-center pt-1">
+            <Button onClick={() => setShowForm(true)} variant="primary">
+              Create your first group
+            </Button>
+          </div>
+          <Rule ornament />
         </div>
       ) : (
         <SpecimenList>

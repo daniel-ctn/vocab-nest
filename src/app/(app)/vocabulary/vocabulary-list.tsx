@@ -16,6 +16,7 @@ import { ButtonLink } from '@/components/ui/button'
 import { Caps } from '@/components/ui/caps'
 import { Chapter } from '@/components/ui/chapter'
 import { Marginalia } from '@/components/ui/marginalia'
+import { Rule } from '@/components/ui/rule'
 import {
   Specimen,
   SpecimenAside,
@@ -270,20 +271,31 @@ export function VocabularyList({
       )}
 
       {displayed.length === 0 ? (
-        <div className="py-16 text-center">
-          <div className="font-display text-5xl text-ink-tertiary">—</div>
-          <p className="mt-3 font-display italic text-[15px] text-ink-tertiary">
-            {query ? 'No matches.' : 'No words yet.'}
-          </p>
-          {!query && (
-            <Link
-              href="/vocabulary/new"
-              className="mt-6 inline-block text-[13px] text-ink underline decoration-accent decoration-[1.5px] underline-offset-[5px] hover:decoration-accent-hover"
-            >
-              Add your first word →
-            </Link>
-          )}
-        </div>
+        query ? (
+          <div className="py-16 text-center">
+            <div className="font-display text-5xl text-ink-tertiary">—</div>
+            <p className="mt-3 font-display italic text-[15px] text-ink-tertiary">
+              No matches for &ldquo;{query}&rdquo;.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-5 py-10 text-center">
+            <Rule ornament />
+            <h3 className="font-display text-[28px] font-semibold leading-tight tracking-tight text-ink">
+              The nest is empty.
+            </h3>
+            <p className="mx-auto max-w-sm font-display text-[16px] italic leading-relaxed text-ink-secondary">
+              Every lexicon begins with a single word. Add the first to start
+              yours.
+            </p>
+            <div className="flex justify-center pt-1">
+              <ButtonLink href="/vocabulary/new" variant="primary">
+                Add your first word
+              </ButtonLink>
+            </div>
+            <Rule ornament />
+          </div>
+        )
       ) : (
         <SpecimenList>
           {displayed.map((entry) => (
