@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Fraunces, Work_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
@@ -25,10 +25,36 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: 'Vocab Nest — a commonplace book for words',
   description:
     'Collect words, bind them into groups, and practise daily with spaced repetition. A calm, deliberate vocabulary keeper.',
+  applicationName: 'Vocab Nest',
+  openGraph: {
+    type: 'website',
+    siteName: 'Vocab Nest',
+    title: 'Vocab Nest — a commonplace book for words',
+    description:
+      'Collect words like a naturalist keeps specimens. A calm, deliberate vocabulary keeper with spaced repetition.',
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vocab Nest — a commonplace book for words',
+    description:
+      'Collect words like a naturalist keeps specimens. A calm, deliberate vocabulary keeper with spaced repetition.',
+  },
+}
+
+// Address-bar tint follows the lamplit / paper themes.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f2e7' },
+    { media: '(prefers-color-scheme: dark)', color: '#16120b' },
+  ],
 }
 
 const themeScript = `

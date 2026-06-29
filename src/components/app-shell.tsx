@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Feather, LogOut, MoreHorizontal, Settings, Shield } from 'lucide-react'
+import { LogOut, MoreHorizontal, Settings, Shield } from 'lucide-react'
+import { LogoMarkAnimated } from '@/components/ui/logo'
 import { signOut } from '@/lib/auth-client'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { PageProgress } from '@/components/page-progress'
@@ -39,9 +40,7 @@ function Wordmark({ size = 'md' }: { size?: 'sm' | 'md' }) {
       className="group inline-flex items-center gap-2.5"
       aria-label="Vocab Nest — Dashboard"
     >
-      <span className="inline-flex h-7 w-7 items-center justify-center border border-ink/80 text-ink transition-colors group-hover:bg-ink group-hover:text-cream">
-        <Feather size={14} strokeWidth={2} />
-      </span>
+      <LogoMarkAnimated size={size === 'sm' ? 24 : 28} decorative />
       <span
         className={cn(
           'font-mono font-medium uppercase tracking-[0.2em] text-ink',
